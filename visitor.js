@@ -10,6 +10,7 @@ const {
     helperEach } = require('./tansformhelper');
 const BlockIf = require('./blockif');
 const Block = require('./block');
+const visitorevent = require('./visitorevents');
 
 let globalBindings = ['render', 'append', 'appendAttribute', 'appendEvent', 'appendText', 'target']
 let bindings = new Set([...globalBindings,
@@ -80,8 +81,25 @@ const visitor = {
               
             } else if (name === 'appendEvent') {
                 ctx.commands.push(function () {
-                    let args = [ctx, path];
+                    let node = path.node.arguments[0].name;
+                    let scope = {node:node,keys:new Set()};
+                    path.traverse(visitorevent,scope)
+                    let properties = []
+                    let ctxObj= t.identifier('ctx');
+                    let event = t.identifier('ev');
+                    let args_=[]
+                    for(let key of scope.keys){
+                         let identifier = t.identifier(key);
+                         properties.push(t.objectProperty(identifier,identifier))   
+                         args_.push(identifier)
+                    }
+                    let assignContext = t.assignmentExpression("=",
+                        t.memberExpression(event,ctxObj),
+                        t.objectExpression(properties)
+                    )
+                    let args = [ctx,t.expressionStatement(assignContext),args_, path];
                     appendEvent(...args);
+                    path.traverse()
                 });
             }
             

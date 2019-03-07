@@ -43,10 +43,23 @@ function render() {
   }
 
   function _block_context4($) {
-    var li, text2;
+    var li, _handler, text2;
 
-    function _handler(event) {
-      $.a && $.b && $.c && $.click(name, $.active);
+    function _create_handler($, name) {
+      function ctx(event) {
+        ctx.ctx.$.click(ctx.ctx.name, ctx.ctx.$.active);
+      }
+
+      _handler_context(ctx, $, name);
+
+      return ctx;
+    }
+
+    function _handler_context(ev, $, name) {
+      ev.ctx = {
+        $: $,
+        name: name
+      };
     }
 
     return {
@@ -55,6 +68,7 @@ function render() {
           name
         } = $.car;
         li = create('li');
+        _handler = _create_handler($, name);
         createEvent(li, 'click', _handler);
         text2 = createText(1, name);
       },
@@ -66,10 +80,14 @@ function render() {
         let {
           name
         } = $.car;
+
+        _handler_context(_handler, $, name);
+
         updateText(text2, 1, name);
       },
       d: function (detach) {
         removeEvent(li, 'click', _handler);
+        _handler = null;
 
         if (detach) {
           remove(li);

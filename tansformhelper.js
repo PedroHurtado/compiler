@@ -29,8 +29,8 @@ function append(ctx, path, declarator) {
     );
 
     ctx.create.push(t.expressionStatement(create));
-    ctx.mount(args[0].name,t.expressionStatement(mount))
-    
+    ctx.mount(args[0].name, t.expressionStatement(mount))
+
     ctx.variables.push(declarator);
 
     //delete 
@@ -48,13 +48,13 @@ function appendText(ctx, path, declarator) {
     let isPrincipalChild = (ctx.parent.name === args[0].name);
     let anchor = isPrincipalChild ? t.identifier('anchor') : t.nullLiteral();
     let expression = hasExpression(args);
-    let flag = expression?t.numericLiteral(1):t.numericLiteral(0);
+    let flag = expression ? t.numericLiteral(1) : t.numericLiteral(0);
     let create = t.assignmentExpression(
         "=",
         declarator,
         t.callExpression(
             t.identifier('createText'),
-            [flag,...args.slice(1)]
+            [flag, ...args.slice(1)]
         )
     );
     ctx.create.push(t.expressionStatement(create));
@@ -63,13 +63,13 @@ function appendText(ctx, path, declarator) {
         [args[0], declarator, anchor]
     );
 
-    ctx.mount(args[0].name,t.expressionStatement(mount))
-   
+    ctx.mount(args[0].name, t.expressionStatement(mount))
+
     ctx.variables.push(declarator);
     if (expression) {
         let updateText = t.callExpression(
             t.identifier('updateText'),
-            [declarator, flag,...args.slice(1)]
+            [declarator, flag, ...args.slice(1)]
         )
         ctx.update.push(t.expressionStatement(updateText));
     }
@@ -86,11 +86,11 @@ function appendText(ctx, path, declarator) {
 function appendAttribute(ctx, path) {
     let node = path.node
     let args = node.arguments;
-    node.arguments = [...args.slice(0,2),t.numericLiteral(0),...args.slice(2)];
-    
+    node.arguments = [...args.slice(0, 2), t.numericLiteral(0), ...args.slice(2)];
+
     ctx.create.push(t.expressionStatement(node));
     if (hasExpression(args)) {
-        node.arguments[2]=t.numericLiteral(1);
+        node.arguments[2] = t.numericLiteral(1);
         let update = t.expressionStatement(t.callExpression(
             t.identifier('updateAttribute'),
             node.arguments
@@ -98,24 +98,65 @@ function appendAttribute(ctx, path) {
         ctx.update.push(update);
     }
 }
-function appendEvent(ctx, path) {
-    let node = path.node; 
+function appendEvent(ctx, assignContext, _args, path) {
+    let node = path.node;
     let args = node.arguments;
-    let handler = path.parentPath.scope.generateUidIdentifier('handler');
-    let expression = args[args.length-1];
-    let argsCall = [...args.slice(0,2),handler]
+    let handler = path.parentPath.scope.generateUidIdentifier('create_handler');
+    let event = path.parentPath.scope.generateUidIdentifier('handler');
+    let handlerContext =  path.parentPath.scope.generateUidIdentifier('handler_context');
+    let expression = args[args.length - 1];
+    let argsCall = [...args.slice(0, 2), event]
+    
+    ctx.variables.push(event);
+
     let contextTemplate = `
-        function HANDLER(event){
-            EXPRESSION
+        function HANDLER(ARGUMENTS){
+            function ctx(event){
+                EXPRESSION
+            }
+            HANDLERCONTEXT(ctx,ARGUMENTS)
+            return ctx;
         }
     `;
+    // ASSIGN: assignContext,
     let mapObject = {
-        HANDLER:handler,
-        EXPRESSION:expression,
+        HANDLER: handler,
+        EXPRESSION: expression,
+        ARGUMENTS: _args,
+        HANDLERCONTEXT: handlerContext,
     }
+    
     let _template = template.statements(contextTemplate)
     let statements = _template(mapObject);
     ctx.handlers.push(...statements);
+
+
+    let handlerContextTemplate = `
+        function HANDLERCONTEXT(ev,ARGUMENTS){
+            ASSIGNCONTENT
+        }
+    `;
+
+    let mapObjectContextTemplate={
+        HANDLERCONTEXT:handlerContext,
+        ARGUMENTS:_args,
+        ASSIGNCONTENT:assignContext
+    }
+
+    let _templateContext = template.statements(handlerContextTemplate)
+    let statementsContext = _templateContext(mapObjectContextTemplate);
+    ctx.handlers.push(...statementsContext);
+
+    let contextEvent = t.expressionStatement(
+        t.assignmentExpression("=", event,
+            t.callExpression(
+                handler,
+                _args
+            )
+        )
+    );
+    ctx.create.push(contextEvent);
+
     let createEvent = t.expressionStatement(
         t.callExpression(
             t.identifier('createEvent'),
@@ -123,15 +164,30 @@ function appendEvent(ctx, path) {
         )
     );
     ctx.create.push(createEvent);
+
+    //update
+
+    let updateEvent = t.expressionStatement(
+        t.callExpression(handlerContext,[
+            event,..._args
+        ])
+    );
+
+    ctx.update.push(updateEvent)
+    
+    //remove
     let removeEvent = t.expressionStatement(
         t.callExpression(
             t.identifier('removeEvent'),
             argsCall
         )
     );
-    
-    ctx.remove.events.push(removeEvent);
 
+    let assignNullToHandler = t.expressionStatement(
+        t.assignmentExpression("=",event,t.nullLiteral())
+    );
+    ctx.remove.events.push(removeEvent);
+    ctx.remove.events.push(assignNullToHandler);
 
 }
 function others(ctx, path) {
@@ -140,7 +196,7 @@ function others(ctx, path) {
 }
 
 function helperIF(path, _if, current) {
-   
+
     let resolveIf = path.parentPath.scope.generateUidIdentifier('currentIf');
     let anchor = path.parentPath.scope.generateUidIdentifier('ifBlock_anchor');
     let ifBlock = path.parentPath.scope.generateUidIdentifier('ifBlock');
@@ -176,14 +232,14 @@ function helperIF(path, _if, current) {
             [_if.blockParent.parent, current._anchor]
         )
     );
-    let mountAnchor =  t.expressionStatement(
+    let mountAnchor = t.expressionStatement(
         t.callExpression(
             t.identifier('append'),
             [_if.blockParent.parent, anchor, current._anchor]
         )
     )
-    current.mount(_if.parentName,mountIf)
-    current.mount(_if.parentName,mountAnchor)
+    current.mount(_if.parentName, mountIf)
+    current.mount(_if.parentName, mountAnchor)
 
 
     //update
@@ -276,7 +332,7 @@ function helperEach(current, path) {
             $: t.identifier('$'),
             EACH: each,
             BLOCKIDENTIFIER: blockIdentifier,
-            EACHBLOCKS:eachBlocks
+            EACHBLOCKS: eachBlocks
         }
 
         //index is present
@@ -293,9 +349,9 @@ function helperEach(current, path) {
 
         let _template = template.statements(contextTemplate)
         let statements = _template(mapObject);
-        
+
         current.variablesEach.push(...statements);
-       
+
 
         let create = createEach({ EACH: eachBlocks });
         current.create.push(...create);
@@ -316,13 +372,13 @@ function helperEach(current, path) {
             )
         );
 
-        current.mount(parentIdentifier.name,...mount);
-        current.mount(parentIdentifier.name,anchorMount);
+        current.mount(parentIdentifier.name, ...mount);
+        current.mount(parentIdentifier.name, anchorMount);
 
-       
+
         //update
 
-        let contextTemplateUpdate=`
+        let contextTemplateUpdate = `
         EACH.forEach((item,i)=>{
             const ctx = CONTEXTEACH($,item,i);
             if(EACHBLOCKS[i]){
@@ -339,23 +395,23 @@ function helperEach(current, path) {
         });
         EACHBLOCKS.length = EACH.length;
         `;
-        let mapUpdate={
-            EACH:node.callee.object,
-            CONTEXTEACH:contextEach,
-            EACHBLOCKS:eachBlocks,
-            $:t.identifier('$'),
-            ANCHOR:anchor
+        let mapUpdate = {
+            EACH: node.callee.object,
+            CONTEXTEACH: contextEach,
+            EACHBLOCKS: eachBlocks,
+            $: t.identifier('$'),
+            ANCHOR: anchor
         }
         let templateUpdate = template.statements(contextTemplateUpdate);
-        let update = templateUpdate(mapUpdate);        
+        let update = templateUpdate(mapUpdate);
         current.update.push(...update);
-    
-        let remove = deleteEach({EACH:eachBlocks});
+
+        let remove = deleteEach({ EACH: eachBlocks });
         current.remove.events.push(...remove);
         current.remove.nodes.push(
             t.expressionStatement(
                 t.callExpression(t.identifier('remove'),
-                [anchor]
+                    [anchor]
                 )
             )
         );
@@ -388,14 +444,14 @@ function mountEach(mapObject) {
     let _template = template.statements(contextTemplate)
     return _template(mapObject);
 }
-function deleteEach(mapObject){
+function deleteEach(mapObject) {
     let contextTemplate = `
     EACH.forEach((each) => {
         each.d(detach);
     })
 `;
-let _template = template.statements(contextTemplate)
-return _template(mapObject);
+    let _template = template.statements(contextTemplate)
+    return _template(mapObject);
 }
 
 module.exports.append = append;

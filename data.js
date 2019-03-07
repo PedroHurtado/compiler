@@ -6,7 +6,7 @@ const data =  {
         { name: 'Pedro' }, { name: 'Loco' }
     ],
     click: function (value,event){
-        console.log(`${this.text} está bastante cuerdo....`)
+        console.log(`${value} está bastante cuerdo....`)
     }
 };
 export default data;
