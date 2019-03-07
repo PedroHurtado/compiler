@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="changes">changes</button>
+    <button id="changesitems">changeItem</button>
+    <div class="main">
+
+    </div>
+  
+    <script type="module">
+        import App  from './x.js';
+        import data from './data.js';
+        
+        let app = new App(
+            document.querySelector('.main'),
+            data
+        )
+        let button =document.querySelector('#changes');
+        button.addEventListener('click',()=>{
+            data.value = !data.value;
+            app.set(data);
+        });
+
+        let buttonItems =document.querySelector('#changesitems');
+        buttonItems.addEventListener('click',()=>{
+            data.active=!data.active;
+            data.items[0].name = 'Gilberto'
+            app.set(data)
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,37 @@
+if(value){
+    <h1 class="hello {active?'active':''}">t`Hello`</h1>
+}else{
+    <h1>t`Esto es una prueba`</h1>
+}    
+<ul>
+    items.forEach(car=>{
+        let {name} = car;
+        <li on:click="a && b && c && click(name,active)">t`{name}`</li>
+    })
+</ul>
+<style>
+    .hello {
+        font-size: 2em;
+    }
+
+    .container {
+        color: blue;
+    }
+
+    .active {
+        color: red;
+    }
+</style>
+<script>
+    export default {
+        value: true,
+        text: 'Almo',
+        active: 1,
+        items: [
+            { name: 'Pedro' }, { name: 'Loco' }
+        ],
+        click: (value) => {
+            console.log(`${value} está bastante cuerdo....`)
+        },
+    }
+</script>
