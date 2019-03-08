@@ -113,11 +113,11 @@ const visitor = {
             });
         let { name } = path.node;
         let scope = this.current && this.current.scope;
+        let key = path.key;
         if (name.indexOf('$$_') > -1) {
             path.node.name = name.replace('$$_', '');
-        } else if (
+        } else if 
             (!bindings.has(name) && name !== '$' && name.indexOf('click_handler') === -1 && path.key != "property")
-            || (scope && scope.has(name))
         ) {
             let member = t.memberExpression(t.identifier('$'), path.node);
             path.skip();
