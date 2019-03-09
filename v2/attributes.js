@@ -1,7 +1,4 @@
 const interpolate = require('./interpolate');
-
-
-
 const reserved = {
     'on': (handler,event) => {
         return function () {

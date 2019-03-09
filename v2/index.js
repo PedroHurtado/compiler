@@ -4,7 +4,6 @@ const path = require('path');
 const interpolate = require('./interpolate');
 const domfunctions = require('./donfunctions');
 const attributes = require('./attributes');
-const DomNodes=require('./domnodes');
 const visitorender=require('./visitorrender');
 const {VDom} = require('./vdom');
 
@@ -34,7 +33,7 @@ let style = childNodes.filter(
 let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
 let position = 0;
 let map = new Map();
-let domnodes = new DomNodes();
+
 
 
 function createItem(tag) {
@@ -113,19 +112,17 @@ position += buffer.write(openFunction, position);
 let end = ' return vdom;}'
 position += buffer.write(end, position)
 
-/*
+
 for(key in domfunctions){
     let value = domfunctions[key].toString()
     position += buffer.write(value, position);    
 }
-*/
-
 
 //position += buffer.write(`export {render};`,position);
 
 let newBuffer = Buffer.alloc(position);
 buffer.copy(newBuffer, 0, 0, position);
-let code = visitorender(newBuffer.toString('utf8'),domnodes);
+let code = visitorender(newBuffer.toString('utf8'));
 {
     
     let newFilename = path.format({

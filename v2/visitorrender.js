@@ -15,7 +15,7 @@ const exportCode = function(ast){
   let newCode = generate(ast).code;
   return newCode;
 }
-const visitorrender = function(code,domNodes){
+const visitorrender = function(code){
   const ast = parser(code);
   traverse(ast, {
     FunctionDeclaration(path) {
