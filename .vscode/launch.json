@@ -10,12 +10,18 @@
             "request": "launch",
             "name": "Iniciar programa",
             "program": "${workspaceFolder}\\index.js"
-        }
+        },
         {
             "type": "node",
             "request": "launch",
             "name": "Visitor",
             "program": "${workspaceFolder}\\visitrenderfunction.js"
+        },{
+            "type": "node",
+            "request": "launch",
+            "name": "V2",
+            "program": "${workspaceFolder}\\v2\\index.js"
         }
+
     ]
 }

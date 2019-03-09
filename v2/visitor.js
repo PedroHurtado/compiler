@@ -2,13 +2,13 @@ const t = require('@babel/types');
 
 const GENERATENUMERIC = (number) => t.numericLiteral(number)
 const SCOPE = t.identifier('$');
-const SEALED = GENERATENUMERIC(1);
-const NOTSEALED = GENERATENUMERIC(0);
-const RESEOLVESEALDED = (sealed) => sealed ? SEALED : NOTSEALED;
+const SEALED = t.numericLiteral(1);
+const NOTSEALED = t.numericLiteral(0);
+const ISSEALDED = (sealed) => !!sealed ? NOTSEALED : SEALED;
 const GENERATEIDENTIFIER = (identifier) => t.identifier(identifier);
 
 
-let globalBindings = ['render', 'append', 'appendAttribute', 'appendEvent', 'appendText', 'target']
+let globalBindings = ['render', 'append', 'appendAttribute', 'appendEvent', 'appendText', 'target', 'vdom']
 let bindings = new Set([...globalBindings,
 ...Object.getOwnPropertyNames(Array),
 ...Object.getOwnPropertyNames(Array.prototype),
@@ -18,6 +18,9 @@ let bindings = new Set([...globalBindings,
 
 let blockIndex = 0;
 let nodeIndex = 0;
+let blocks = [];
+currentBlock = blockIndex
+
 const getNodeType = function (callee) {
     if (t.isIdentifier(callee)) {
         return callee.name;
@@ -25,18 +28,34 @@ const getNodeType = function (callee) {
         return callee.property.name;
     }
 }
-function hasExpression(args, start) {
-    //2 suppress tag and parent arguments
-    let exp = args.slice(star).filter(c => {
+function hasExpression(args) {
+    let exp = args.filter(c => {
         return c.type.indexOf('Literal') === -1
     })
-    return RESEOLVESEALDED(exp.length);
+    return ISSEALDED(exp.length);
 }
-function replaceArguments(args, path, node) {
-    let sealed = hasExpression(args, 1);
-    let newArgs = [GENERATENUMERIC(blockIndex), sealed, GENERATENUMERIC(nodeIndex), ...args];
+function replaceArguments(path, node, newArgs) {
     path.skip();
     node.arguments = newArgs;
+}
+
+function replaceText(args, path, node, update) {
+    let keyIndex = update || GENERATENUMERIC(nodeIndex)
+    let sealed = hasExpression(args);
+    let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, sealed, ...args];
+    replaceArguments(path, node, newArgs);
+}
+
+
+function replaceAppend(args, path, node, update) {
+    let keyIndex = update || GENERATENUMERIC(nodeIndex)
+    let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, ...args];
+    replaceArguments(path, node, newArgs);
+}
+function replaceAttribute(args, path, node) {
+    let sealed = hasExpression(args);
+    let newArgs = [sealed, ...args];
+    replaceArguments(path, node, newArgs);
 }
 function replaceIdentifier(bindings, name, key) {
     return !bindings.has(name)
@@ -44,20 +63,32 @@ function replaceIdentifier(bindings, name, key) {
         && name.indexOf('click_handler') === -1
         && key != "property"
 }
+function checkUpdate(path) {
+    //work arround;
+    return path.parentPath.parentPath.data.update;
+}
 const visitor = {
-    CallExpression() {
-        exit: function(path) {
+    CallExpression: {
+        enter: function (path) {
+            let { node } = path;
+            let name = getNodeType(node.callee);
+            let ctx = this.current;
+            if (name === 'forEach') {
+                this.blockEach = true;
+            }
+        },
+        exit: function (path) {
             let node = path.node;
             let args = node.arguments;
             let name = getNodeType(node.callee);
             if (name === 'append') {
                 nodeIndex++;
-                replaceArguments(args, path, node);
+                replaceAppend(args, path, node, checkUpdate(path));
             } else if (name === 'appendText') {
-                nodeIndex++;
-                replaceArguments(args, path, node);
+                nodeIndex++
+                replaceText(args, path, node, checkUpdate(path));
             } else if (name === 'appendAttribute') {
-                replaceArguments(args, path, node);
+                replaceAttribute(args, path, node);
             } else if (name === 'appendEvent') {
 
 
@@ -66,28 +97,43 @@ const visitor = {
     },
     Identifier(path) {
         Object.keys(path.scope.bindings)
-            .filter(name => name.indexOf('$$_') === -1)
             .forEach(name => {
                 bindings.add(name)
             });
         let { name } = path.node;
         let key = path.key;
-        if (name.indexOf('$$_') > -1) {
-            path.node.name = name.replace('$$_', '');
-        } else if replaceIdentifier(bindings, name, key)   
-        {
-            let member = t.memberExpression(t.identifier('$'), path.node);
+        if (replaceIdentifier(bindings, name, key)) {
+            let member = t.memberExpression(SCOPE, path.node);
             path.skip();
             path.replaceWith(member);
         }
 
-    }
+    },
     BlockStatement: {
-        enter: function () {
+        enter: function (path) {
+            this.firstBlock = this.firstBlock || path.node.body;
+            if (this.blockEach) {
+                let id = path.scope.generateUidIdentifier("each_index");
+                let variable = t.variableDeclaration("var",
+                    [t.variableDeclarator(id, t.numericLiteral(0))]
+                );
+                let update = t.updateExpression("++", id);
+                path.node.body.unshift(update);
+                this.firstBlock.unshift(variable);
+                bindings.add(id.name);
+                path.data.update = id;
+                this.blockEach = false;
+            }
+            nodeIndex = 0;
+            currentBlock = blockIndex;
+            blocks.push(currentBlock);
             blockIndex++;
+        },
+        exit: function () {
+            blocks.pop();
+            currentBlock = blocks[blocks.length - 1];
         }
     }
 
 }
-
-
+module.exports = visitor;
