@@ -27,7 +27,10 @@ const visitorrender = function (code) {
           blockIndex :0,
           nodeIndex :0,
           blocks :[],
-          currentBlock : 0
+          currentBlock : 0,
+          anchorIndex:0,
+          anchors:[],
+          currentAnchor:null
         }
         path.traverse(visitor, scope)
         path.stop();

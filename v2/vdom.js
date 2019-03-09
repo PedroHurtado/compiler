@@ -13,18 +13,20 @@ class VDom {
             tag: null,
             action: 'c',
             state: {},
+            _anchor: null,
         };
     }
     generateKey(block, key, tagKey) {
         return `${block.toString().padStart(3, '0')}.${key.toString().padStart(4, '0')}.${tagKey}`;
     }
-    getDefault(tag){
+    getDefault(tag, anchor) {
         this.default.tag = tag;
+        this.default.anchor = anchor;
         return this.default;
     }
-    createCurrentNode(key, tag) {
+    createCurrentNode(key, tag, anchor) {
         if (this.first) {
-            return this.getDefault(tag);
+            return this.getDefault(tag, anchor);
         }
         else {
             let current = this.last.get(key)
@@ -32,7 +34,7 @@ class VDom {
                 this.last.delete(key);
                 return current;
             }
-            return this.getDefault(tag);
+            return this.getDefault(tag, anchor);
         }
     }
     setParent(parent, tagKey, node) {
@@ -45,13 +47,14 @@ class VDom {
             current.children.push(node);
         }
     }
-    append(block, key, parent, tagKey, tag) {
+    append(block, key, anchor, parent, tagKey, tag) {
         let _key = this.generateKey(block, key, tagKey);
 
-        this.currentNode = this.createCurrentNode(_key, tag);
+        this.currentNode = this.createCurrentNode(_key, tag, anchor);
         let {
             action,
-            state
+            state,
+            _anchor
         } = this.currentNode;
         if (action === 'c') {
             this.current.set(_key, this.currentNode);
@@ -62,14 +65,15 @@ class VDom {
         this.setParent(parent, tagKey, this.currentNode.node);
     }
 
-    appendText(block, key, sealed, parent, tagKey, ...value) {
+    appendText(block, key, anchor, sealed, parent, tagKey, ...value) {
         let _key = this.generateKey(block, key, tagKey);
         let _value = value.join('');
-        this.currentNode = this.createCurrentNode(_key, 'text');
+        this.currentNode = this.createCurrentNode(_key, 'text', anchor);
         let {
             action,
             state,
             node,
+            _anchor
         } = this.currentNode;
 
         if (action === 'c') {
@@ -110,6 +114,9 @@ class VDom {
     }
     appendEvent() {
 
+    }
+    anchor(anchor) {
+        
     }
     close() {
         this.first = 0;

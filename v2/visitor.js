@@ -6,6 +6,9 @@ const SEALED = t.numericLiteral(1);
 const NOTSEALED = t.numericLiteral(0);
 const ISSEALDED = (sealed) => !!sealed ? NOTSEALED : SEALED;
 const GENERATEIDENTIFIER = (identifier) => t.identifier(identifier);
+const NULLLITERAL = t.nullLiteral();
+const VDOM=t.identifier('vdom');
+const ANCHOR= t.identifier('anchor');
 
 
 let globalBindings = ['render', 'append', 'appendAttribute', 'appendEvent', 'appendText', 'target', 'vdom']
@@ -35,17 +38,19 @@ function replaceArguments(path, node, newArgs) {
     node.arguments = newArgs;
 }
 
-function replaceText(args, path, node, update,nodeIndex,currentBlock) {
+function replaceText(args, path, node, update, nodeIndex, currentBlock, anchor) {
+    let anchorNode = anchor ? anchor:NULLLITERAL;
     let keyIndex = update || GENERATENUMERIC(nodeIndex)
     let sealed = hasExpression(args);
-    let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, sealed, ...args];
+    let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, anchorNode, sealed, ...args];
     replaceArguments(path, node, newArgs);
 }
 
 
-function replaceAppend(args, path, node, update,nodeIndex,currentBlock) {
+function replaceAppend(args, path, node, update, nodeIndex, currentBlock, anchor) {
+    let anchorNode = anchor ? anchor:NULLLITERAL;
     let keyIndex = update || GENERATENUMERIC(nodeIndex)
-    let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, ...args];
+    let newArgs = [GENERATENUMERIC(currentBlock), keyIndex,anchorNode, ...args];
     replaceArguments(path, node, newArgs);
 }
 function replaceAttribute(args, path, node) {
@@ -63,6 +68,19 @@ function checkUpdate(path) {
     //work arround;
     return path.parentPath.parentPath.data.update;
 }
+function isPrincipalIf({ key }) {
+    return key !== 'consequent' && key !== 'alternate'
+}
+function generateAnchor(id) {
+    return t.stringLiteral(`anchor${id}`);
+}
+function generateVDomAnchor(anchor){
+    let anchorcall = t.callExpression(
+        t.memberExpression(VDOM,ANCHOR),
+        [anchor]
+    );
+    return t.expressionStatement(anchorcall);
+}
 const visitor = {
     CallExpression: {
         enter: function (path) {
@@ -78,10 +96,26 @@ const visitor = {
             let name = getNodeType(node.callee);
             if (name === 'append') {
                 this.nodeIndex++;
-                replaceAppend(args, path, node, checkUpdate(path),this.nodeIndex,this.currentBlock);
+                replaceAppend(
+                    args,
+                    path,
+                    node,
+                    checkUpdate(path),
+                    this.nodeIndex,
+                    this.currentBlock,
+                    this.currentAnchor
+                );
             } else if (name === 'appendText') {
                 this.nodeIndex++
-                replaceText(args, path, node, checkUpdate(path),this.nodeIndex,this.currentBlock);
+                replaceAppend(
+                    args,
+                    path,
+                    node,
+                    checkUpdate(path),
+                    this.nodeIndex,
+                    this.currentBlock,
+                    this.currentAnchor
+                );
             } else if (name === 'appendAttribute') {
                 replaceAttribute(args, path, node);
             } else if (name === 'appendEvent') {
@@ -106,7 +140,7 @@ const visitor = {
     },
     BlockStatement: {
         enter: function (path) {
-            
+
             if (this.blockEach) {
                 let id = path.scope.generateUidIdentifier("each_index");
                 let variable = t.variableDeclarator(id, t.numericLiteral(0))
@@ -125,6 +159,24 @@ const visitor = {
         exit: function () {
             this.blocks.pop();
             this.currentBlock = this.blocks[this.blocks.length - 1];
+        }
+    },
+    IfStatement: {
+        enter: function (path) {
+            let principal = isPrincipalIf(path);
+            if (principal) {
+                this.anchorIndex++;
+                this.currentAnchor = generateAnchor(this.anchorIndex);
+                this.anchors.push(this.currentAnchor)
+            }
+        },
+        exit: function (path) {
+            let principal = isPrincipalIf(path);
+            if (principal) {
+                let anchor = this.anchors.pop();
+                path.insertAfter(generateVDomAnchor(anchor));
+                this.currentAnchor = this.anchors[this.anchors.length - 1];
+            }
         }
     }
 
