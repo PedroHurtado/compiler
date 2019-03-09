@@ -13,20 +13,19 @@ class VDom {
             tag: null,
             action: 'c',
             state: {},
-            _anchor: null,
+            anchor: null,
         };
     }
     generateKey(block, key, tagKey) {
         return `${block.toString().padStart(3, '0')}.${key.toString().padStart(4, '0')}.${tagKey}`;
     }
-    getDefault(tag, anchor) {
-        this.default.tag = tag;
-        this.default.anchor = anchor;
-        return this.default;
+    getDefault(init) {
+        let defaultNode = Object.assign({},this.default,init)
+        return defaultNode;
     }
     createCurrentNode(key, tag, anchor) {
         if (this.first) {
-            return this.getDefault(tag, anchor);
+            return this.getDefault({ tag, anchor });
         }
         else {
             let current = this.last.get(key)
@@ -34,7 +33,7 @@ class VDom {
                 this.last.delete(key);
                 return current;
             }
-            return this.getDefault(tag, anchor);
+            return this.getDefault({ tag, anchor });
         }
     }
     setParent(parent, tagKey, node) {
@@ -54,7 +53,6 @@ class VDom {
         let {
             action,
             state,
-            _anchor
         } = this.currentNode;
         if (action === 'c') {
             this.current.set(_key, this.currentNode);
@@ -73,7 +71,6 @@ class VDom {
             action,
             state,
             node,
-            _anchor
         } = this.currentNode;
 
         if (action === 'c') {
@@ -116,7 +113,7 @@ class VDom {
 
     }
     anchor(anchor) {
-        
+
     }
     close() {
         this.first = 0;
