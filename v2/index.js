@@ -70,7 +70,7 @@ position+=buffer.write(VDom.toString(), position)
 
 
 
-let openFunction = `const vdom = new VDom(); function render ($){`;
+let openFunction = `const vdom = new VDom(1); function render ($){`;
 position += buffer.write(openFunction, position);
 
 (function write(nodes, currentElement) {

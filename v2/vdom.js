@@ -1,36 +1,47 @@
 class VDom {
-    constructor() {
+    constructor(first) {
+        this.first = first;
         this.last = new Map();
         this.inizialice();
     }
     inizialice() {
         this.current = new Map();
         this.dom = new Map();
-        this.dom.set('target',{node:null,children:[]})
+        this.dom.set('target', { node: null, children: [] })
         this.currentNode = null;
-    }
-    generateKey(block, key, tagKey) {
-        return `${block.toString().padStart(3, '0')}.${key.toString().padStart(4, '0')}.${tagKey}`;
-    }
-    createCurrentNode(key, tag) {
-        let current = this.last.get(key)
-        if (current) {
-            this.last.delete(key);
-            return current;
-        }
-        return {
-            tag: tag,
+        this.default = {
+            tag: null,
             action: 'c',
             state: {},
         };
     }
-    setParent(parent,tagKey,node){
-        let current = this.dom.get(parent);
-        if(!current){
-            current = {node:node,children:[]};
-            this.dom.set(tagKey,current)
+    generateKey(block, key, tagKey) {
+        return `${block.toString().padStart(3, '0')}.${key.toString().padStart(4, '0')}.${tagKey}`;
+    }
+    getDefault(tag){
+        this.default.tag = tag;
+        return this.default;
+    }
+    createCurrentNode(key, tag) {
+        if (this.first) {
+            return this.getDefault(tag);
         }
-        else{
+        else {
+            let current = this.last.get(key)
+            if (current) {
+                this.last.delete(key);
+                return current;
+            }
+            return this.getDefault(tag);
+        }
+    }
+    setParent(parent, tagKey, node) {
+        let current = this.dom.get(parent);
+        if (!current) {
+            current = { node: node, children: [] };
+            this.dom.set(tagKey, current)
+        }
+        else {
             current.children.push(node);
         }
     }
@@ -48,7 +59,7 @@ class VDom {
         } else {
             this.current.set(_key, this.currentNode);
         }
-        this.setParent(parent,tagKey,this.currentNode.node);
+        this.setParent(parent, tagKey, this.currentNode.node);
     }
 
     appendText(block, key, sealed, parent, tagKey, ...value) {
@@ -74,7 +85,7 @@ class VDom {
             }
             this.current.set(_key, this.currentNode);
         }
-        this.setParent(parent,tagKey,this.currentNode.node);
+        this.setParent(parent, tagKey, this.currentNode.node);
     }
     appendAttribute(sealed, attr, ...value) {
         let _value = value.join('');
@@ -101,6 +112,7 @@ class VDom {
 
     }
     close() {
+        this.first = 0;
         for (let [key, value] of this.current) {
             value.action = ''
         }
