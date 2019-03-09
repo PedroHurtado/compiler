@@ -17,8 +17,11 @@
     <script type="module">
         import App  from './v2/x.js';
         import data from './v2/data.js';
-        
         let dom = App(data);
+        dom.close();
+        data.value = false;
+        dom=App(data);
+        dom.close();
     </script>
 </body>
 

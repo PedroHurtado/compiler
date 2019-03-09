@@ -30,8 +30,7 @@ let style = childNodes.filter(
         return tagName && tagName === 'style'
     }
 );
-let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
-let position = 0;
+
 let map = new Map();
 
 
@@ -61,14 +60,15 @@ function isTextContent(text) {
     return null;
 }
 
-const hashCode = function(s){
-    return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
+let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
+let position = 0;
+for(key in domfunctions){
+    let value = domfunctions[key].toString()
+    position += buffer.write(value, position);    
 }
+position+=buffer.write(VDom.toString(), position)
 
-const decorateItem = function(item){
-    return `$$_${item}`;
-}
-position+=position += buffer.write(VDom.toString(), 0)
+
 
 let openFunction = `const vdom = new VDom(); function render ($){`;
 position += buffer.write(openFunction, position);
@@ -112,11 +112,6 @@ position += buffer.write(openFunction, position);
 let end = ' return vdom;}'
 position += buffer.write(end, position)
 
-
-for(key in domfunctions){
-    let value = domfunctions[key].toString()
-    position += buffer.write(value, position);    
-}
 
 //position += buffer.write(`export {render};`,position);
 

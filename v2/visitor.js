@@ -16,10 +16,6 @@ let bindings = new Set([...globalBindings,
 ...Object.getOwnPropertyNames(Object),
 ]);
 
-let blockIndex = 0;
-let nodeIndex = 0;
-let blocks = [];
-currentBlock = blockIndex
 
 const getNodeType = function (callee) {
     if (t.isIdentifier(callee)) {
@@ -39,7 +35,7 @@ function replaceArguments(path, node, newArgs) {
     node.arguments = newArgs;
 }
 
-function replaceText(args, path, node, update) {
+function replaceText(args, path, node, update,nodeIndex,currentBlock) {
     let keyIndex = update || GENERATENUMERIC(nodeIndex)
     let sealed = hasExpression(args);
     let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, sealed, ...args];
@@ -47,7 +43,7 @@ function replaceText(args, path, node, update) {
 }
 
 
-function replaceAppend(args, path, node, update) {
+function replaceAppend(args, path, node, update,nodeIndex,currentBlock) {
     let keyIndex = update || GENERATENUMERIC(nodeIndex)
     let newArgs = [GENERATENUMERIC(currentBlock), keyIndex, ...args];
     replaceArguments(path, node, newArgs);
@@ -72,7 +68,6 @@ const visitor = {
         enter: function (path) {
             let { node } = path;
             let name = getNodeType(node.callee);
-            let ctx = this.current;
             if (name === 'forEach') {
                 this.blockEach = true;
             }
@@ -82,11 +77,11 @@ const visitor = {
             let args = node.arguments;
             let name = getNodeType(node.callee);
             if (name === 'append') {
-                nodeIndex++;
-                replaceAppend(args, path, node, checkUpdate(path));
+                this.nodeIndex++;
+                replaceAppend(args, path, node, checkUpdate(path),this.nodeIndex,this.currentBlock);
             } else if (name === 'appendText') {
-                nodeIndex++
-                replaceText(args, path, node, checkUpdate(path));
+                this.nodeIndex++
+                replaceText(args, path, node, checkUpdate(path),this.nodeIndex,this.currentBlock);
             } else if (name === 'appendAttribute') {
                 replaceAttribute(args, path, node);
             } else if (name === 'appendEvent') {
@@ -111,27 +106,25 @@ const visitor = {
     },
     BlockStatement: {
         enter: function (path) {
-            this.firstBlock = this.firstBlock || path.node.body;
+            
             if (this.blockEach) {
                 let id = path.scope.generateUidIdentifier("each_index");
-                let variable = t.variableDeclaration("var",
-                    [t.variableDeclarator(id, t.numericLiteral(0))]
-                );
+                let variable = t.variableDeclarator(id, t.numericLiteral(0))
                 let update = t.updateExpression("++", id);
                 path.node.body.unshift(update);
-                this.firstBlock.unshift(variable);
+                this.variables.push(variable);
                 bindings.add(id.name);
                 path.data.update = id;
                 this.blockEach = false;
             }
-            nodeIndex = 0;
-            currentBlock = blockIndex;
-            blocks.push(currentBlock);
-            blockIndex++;
+            this.nodeIndex = 0;
+            this.currentBlock = this.blockIndex;
+            this.blocks.push(this.currentBlock);
+            this.blockIndex++;
         },
         exit: function () {
-            blocks.pop();
-            currentBlock = blocks[blocks.length - 1];
+            this.blocks.pop();
+            this.currentBlock = this.blocks[this.blocks.length - 1];
         }
     }
 

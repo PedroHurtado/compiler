@@ -5,23 +5,23 @@ function append(parent, node,anchor) {
     parent.insertBefore(node,anchor);
 }
 function createText(text){
-  return  document.createTextNode(value);
+  return  document.createTextNode(text);
 }
 function updateText(node,text){
-    node.data  = value;
+    node.data  = text;
 }
-function appendAttribute(node,namevalues) {
+function setAttribute(node,attr,value) {
     if(name==='class'){
-        appendClass(node,value);
+        appendClass(value);
     }else{
-        node.setAttribute(name, value)
+        node.setAttribute(attr, value)
     }
 }
 function remove(node){
     node.parentNode.removeChild(node);
 }
 function appendClass(node, className) {
-   node.className = className;
+   node.className = className.trim();
 }
 function createEvent(node, event, handler) {
     node.addEventListener(event, handler)
@@ -37,7 +37,7 @@ module.exports = {
     APPEND: append,
     CREATETEXT: createText,
     UPDATETEXT:updateText,
-    ATTRIBUTE: appendAttribute,
+    ATTRIBUTE: setAttribute,
     CLASS:appendClass,
     CREATEEVENT: createEvent,
     REMOVEEVENT:removeEvent,

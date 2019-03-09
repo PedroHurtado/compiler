@@ -11,20 +11,32 @@ const globalIdentifier = (path) => {
     return path.scope.generateUidIdentifier(name);
   }
 };
-const exportCode = function(ast){
+const exportCode = function (ast) {
   let newCode = generate(ast).code;
   return newCode;
 }
-const visitorrender = function(code){
+const visitorrender = function (code) {
   const ast = parser(code);
   traverse(ast, {
     FunctionDeclaration(path) {
-      let node = path.node;
-      let name = node.id.name;
-      
+      let { node } = path;
+      let { name } = node.id;
       if (name === 'render') {
-        path.traverse(visitor,{})
+        let scope = {
+          variables: [],
+          blockIndex :0,
+          nodeIndex :0,
+          blocks :[],
+          currentBlock : 0
+        }
+        path.traverse(visitor, scope)
         path.stop();
+        if (scope.variables.length) {
+          let { body } = node.body
+          let declarator = t.variableDeclaration("var", scope.variables);
+          body.unshift(declarator);
+        }
+
       }
     }
   });
