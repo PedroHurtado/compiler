@@ -150,15 +150,26 @@ const visitor = {
                 bindings.add(id.name);
                 path.data.update = id;
                 this.blockEach = false;
+
+                //anchor
+
+                this.anchorIndex++;
+                this.currentAnchor = generateAnchor(this.anchorIndex);
+                this.anchors.push(this.currentAnchor)
             }
             this.nodeIndex = 0;
             this.currentBlock = this.blockIndex;
             this.blocks.push(this.currentBlock);
             this.blockIndex++;
         },
-        exit: function () {
+        exit: function (path) {
             this.blocks.pop();
             this.currentBlock = this.blocks[this.blocks.length - 1];
+            if(path.data.update){
+                let anchor = this.anchors.pop();
+                this.currentAnchor = this.anchors[this.anchors.length - 1];
+                path.parentPath.parentPath.insertAfter(generateVDomAnchor(anchor))
+            }
         }
     },
     IfStatement: {
