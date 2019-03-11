@@ -128,22 +128,23 @@ class VDom {
 
     }
     reduceDom(target) {
-        let principals = [];
+        let domParents = [];
 
         for (let [key, value] of this.dom) {
             let {
                 node,
-                parentKey
+                parentKey,
+                children
             } = value;
-            value.children.forEach(child => {
+           children.forEach(child => {
                 append(node, child, null);
             });
 
             if (!this.dom.get(parentKey)) {
-                principals.push(node);
+                domParents.push(node);
             }
         }
-        principals.forEach(node => {
+        domParents.forEach(node => {
             append(node.parent || target, node);
         });
     }
