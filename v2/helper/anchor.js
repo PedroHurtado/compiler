@@ -3,7 +3,7 @@ const t = require('@babel/types');
 const ZERO = t.numericLiteral(0);
 const VDOM = t.identifier('vdom');
 const ANCHOR = t.identifier('anchor');
-const NULL = t.nullLiteral();
+
 
 
 function generateAnchor(id) {
@@ -22,18 +22,12 @@ class Anchor {
     constructor() {
         this._block;
         this._index=0;
-        this._anchors =[];
     }
     enter() {
         let current = new Anchor()
-        current._key = t.numericLiteral(this._index);
-        this._anchors.push(current);
+        current._key = generateAnchor(this._index);
         this._index++
         return current;
-    }
-    exit() {
-        this._anchors.pop();
-        return anchors[this._anchors.length - 1];
     }
     set block(value) {
         this._block = value;
@@ -45,7 +39,7 @@ class Anchor {
         return generateVDomAnchor(this._key)
     }
     get key() {
-        return this._key || NULL
+        return this._key;
     }
     get nodeIndex() {
         return ZERO;

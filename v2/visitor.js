@@ -11,7 +11,7 @@ const GENERATEIDENTIFIER = (identifier) => t.identifier(identifier);
 const NULLLITERAL = t.nullLiteral();
 const VDOM = t.identifier('vdom');
 const ANCHOR = t.identifier('anchor');
-
+const NULL = t.nullLiteral();
 
 
 let dom = new Map();
@@ -85,12 +85,16 @@ function isPrincipalIf({ key }) {
 }
 
 function saveAnchor(anchor) {
-    let {statement} = anchor;
+    let { statement } = anchor;
     statement.__infoExtra = {
         anchor: anchor.key.value,
         blockAnchor: anchor.block,
     }
     return statement;
+}
+function getCurrentBlock(path) {
+    let {node} = path.findParent((path) => path.isBlockStatement());
+    return  node.__currentBlock
 }
 
 
@@ -105,21 +109,22 @@ const visitor = {
             }
         },
         exit: function (path) {
+            let block = getCurrentBlock(path);
             let node = path.node;
             let args = node.arguments;
             let name = getNodeType(node.callee);
             if (name === 'append') {
                 node.arguments = replaceAppend(
                     args,
-                    this.currentBlock,
-                    (this.currentAnchor &&  this.currentAnchor.key) || null
+                    block,
+                    (this.currentAnchor && this.currentAnchor.key) || NULL
                 );
                 path.skip();
             } else if (name === 'appendText') {
                 node.arguments = replaceText(
                     args,
-                    this.currentBlock,
-                    (this.currentAnchor &&  this.currentAnchor.key) || null
+                    block,
+                    (this.currentAnchor && this.currentAnchor.key) || NULL
                 );
                 path.skip();
             } else if (name === 'appendAttribute') {
@@ -127,16 +132,17 @@ const visitor = {
                 path.skip();
             }
             else if (name === 'forEach') {
-                let statement = saveAnchor(anchor);
-                this.currentAnchor = this.anchor.exit();
-                path.parentPath.insertAfter(statement)
+                let statement = saveAnchor(this.currentAnchor);
+                path.parentPath.insertAfter(statement);
+                this.currentAnchor = null;
                 path.skip();
+
             } else if (name === 'anchor') {
                 let { __infoExtra } = path.parent;
                 let { anchor, blockAnchor } = __infoExtra;
                 let parent = getParent(blockAnchor.parent.value, anchor, blockAnchor)
                 node.arguments = [
-                    this.currentBlock.key,
+                    block.key,
                     GENERATENUMERIC(0),
                     ...args,
                     parent
@@ -164,29 +170,29 @@ const visitor = {
     },
     BlockStatement: {
         enter: function (path) {
-            this.currentBlock= this.block.enter();
+            let block = this.block.enter();
+            let { node } = path;
+            node.__currentBlock = block;
             if (this.blockEach) {
-                let { node } = path;
                 let id = path.scope.generateUidIdentifier("each_index");
                 let variable = t.variableDeclarator(id, t.numericLiteral(0))
                 this.variables.push(variable);
-                this.currentBlock.each = id;
+                block.each = id;
                 this.blockEach = false;
             }
-
         },
         exit: function (path) {
+            let {__currentBlock} =  path.node;
             if (this.currentAnchor) {
-                this.currentAnchor.block = this.currentBlock;
+                this.currentAnchor.block = __currentBlock
             }
-            let { each } = this.block;
+            let { each } = __currentBlock;
             if (each) {
                 let { body } = path.node;
                 let incremental = t.updateExpression("++", each);
                 body.push(incremental);
                 path.skip();
             }
-           this.currentBlock= this.block.exit();
         }
     },
     IfStatement: {
@@ -199,7 +205,7 @@ const visitor = {
             if (isPrincipalIf(path)) {
                 let statement = saveAnchor(this.currentAnchor);
                 path.insertAfter(statement);
-                this.currentAnchor = this.anchor.exit();
+                this.currentAnchor = null;
             }
         }
     }
