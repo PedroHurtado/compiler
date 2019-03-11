@@ -3,8 +3,9 @@ const traverse = require('@babel/traverse').default;
 const generate = require('@babel/generator').default;
 const t = require('@babel/types');
 const visitor = require('./visitor');
-
-
+const Block = require('./helper/block')
+const Anchor = require('./helper/anchor');
+const bindings = require('./helper/bindings');
 
 const globalIdentifier = (path) => {
   return function (name) {
@@ -24,13 +25,11 @@ const visitorrender = function (code) {
       if (name === 'render') {
         let scope = {
           variables: [],
-          blockIndex :0,
-          nodeIndex :0,
-          blocks :[],
-          currentBlock : 0,
-          anchorIndex:0,
-          anchors:[],
-          currentAnchor:null
+          block: new Block(),
+          currentBlock :null,
+          anchor : new Anchor(),
+          currentAnchor : null,
+          scope:new Set(bindings)
         }
         path.traverse(visitor, scope)
         path.stop();
