@@ -2,15 +2,15 @@ const { META, createMeta } = require('./meta');
 const {GENERATESTRING,ISSEALDED,GENERATENUMERIC} = require('./constans');
 
 
-let dom = new Map();
+let nodes;
 function getParent(parent, key, block) {
-    let _parent = dom.get(parent);
+    let _parent = nodes.get(parent);
     let value = {
         parent: [block.key.value, block.nodeIndex.value, key],
         each: block.each,
         extraEach: null
     };
-    dom.set(key, value)
+    nodes.set(key, value)
     if (block.each) {
         value.extraEach = [block.key, block.each, GENERATESTRING(key)];
     }
@@ -63,9 +63,13 @@ function transformAnchors(args, { anchor }) {
     ];
 }
 
+function initNodes(){
+    nodes =new Map();
+}
 module.exports ={
     transformAppend,
     transformText,
     transformAnchors,
     transformAttribute,
+    initNodes
 }
