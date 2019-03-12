@@ -1,4 +1,4 @@
-const {GENERATENUMERIC,GENERATESTRING} = require('./constans');
+const {GENERATENUMERIC,GENERATESTRING,ZERO} = require('./constans');
 
 class Block {
     constructor() {

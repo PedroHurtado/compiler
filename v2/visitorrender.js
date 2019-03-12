@@ -13,7 +13,7 @@ const visitorRender = {
                 variables: [],
                 block: new Block(),
                 anchor: new Anchor(),
-                globlScope: new Set(globalScope)
+                globalScope: new Set(globalScope)
             }
             path.traverse(visitor, scope)
             path.stop();

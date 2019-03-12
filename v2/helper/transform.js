@@ -1,4 +1,4 @@
-const { META, createMeta } = require('./helper/meta');
+const { META, createMeta } = require('./meta');
 const {GENERATESTRING,ISSEALDED,GENERATENUMERIC} = require('./constans');
 
 

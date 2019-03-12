@@ -19,6 +19,7 @@ const {
     generateUpdateEach
 } = require('./helper/generators').visitor
 
+const {NULL} = require('./helper/constans');
 
 function isScopeIdentifier(globlaScope, name, key) {
     return !globlaScope.has(name)
@@ -114,11 +115,11 @@ const visitor = {
     Identifier(path) {
         Object.keys(path.scope.bindings)
             .forEach(name => {
-                this.globlaScope.add(name)
+                this.globalScope.add(name)
             });
         let { node, key } = path;
         let { name } = node;
-        if (isScopeIdentifier(this.globlaScope, name, key)) {
+        if (isScopeIdentifier(this.globalScope, name, key)) {
             path.skip();
             path.replaceWith(
                 generateMemberScope(node)

@@ -4,7 +4,7 @@ const reservedWords = [
     'appendText',
     'appendAttribute',
     'appendEvent',
-    'anchor'
+    'anchor',
     'vdom'
 ];
 const RENDER = 'render';

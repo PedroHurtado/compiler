@@ -20,7 +20,7 @@ class VDom {
         return key.join('.');
     }
     generateParent(parent) {
-        return Array.isArray(parent) ? parent.join('.') : parent;
+        return Array.isArray(parent) ? this.generateKey(parent) : parent;
     }
     getDefault(init) {
         let defaultNode = Object.assign({}, this.default, init);

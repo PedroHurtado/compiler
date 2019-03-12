@@ -22,6 +22,5 @@ module.exports={
     META,
     createMeta,
     getMeta,
-    getNodeType,
     getFunctionName
 }

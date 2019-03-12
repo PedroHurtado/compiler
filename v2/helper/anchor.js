@@ -1,4 +1,5 @@
 const {generateAnchor,generateVDomAnchor} =require('./generators').anchor;
+const {ZERO} =require('./constans');
 class Anchor {
     constructor() {
         this._block;

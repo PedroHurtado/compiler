@@ -24,7 +24,7 @@ module.exports ={
     ZERO,
     NULL,
     ISSEALDED,
-    GENERATEIDENTIFIER
+    GENERATEIDENTIFIER,
     VDOM,
     ANCHOR,
     SCOPE
