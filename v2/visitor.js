@@ -97,6 +97,14 @@ function getCurrentBlock(path) {
     return  node.__currentBlock
 }
 
+const visitorBlock={
+    BlockStatement:{
+        enter(path){
+            let {node} = path;
+            node.__each = this.each;
+        }
+    }
+}
 
 const visitor = {
     CallExpression: {
@@ -132,10 +140,10 @@ const visitor = {
                 path.skip();
             }
             else if (name === 'forEach') {
-                let statement = saveAnchor(this.currentAnchor);
-                path.parentPath.insertAfter(statement);
-                this.currentAnchor = null;
-                path.skip();
+                //let statement = saveAnchor(this.currentAnchor);
+                //path.parentPath.insertAfter(statement);
+                //this.currentAnchor = null;
+                //path.skip();
 
             } else if (name === 'anchor') {
                 let { __infoExtra } = path.parent;
@@ -173,21 +181,25 @@ const visitor = {
             let block = this.block.enter();
             let { node } = path;
             node.__currentBlock = block;
-            if (this.blockEach) {
+            if(node.__each){
+                block.each = node.__each;
+            }
+            if (this.blockEach && !node.__each) {
                 let id = path.scope.generateUidIdentifier("each_index");
                 let variable = t.variableDeclarator(id, t.numericLiteral(0))
                 this.variables.push(variable);
                 block.each = id;
+                path.traverse(visitorBlock,{each:block.each,block:block})
                 this.blockEach = false;
             }
         },
         exit: function (path) {
-            let {__currentBlock} =  path.node;
+            let {__currentBlock,__each} =  path.node;
             if (this.currentAnchor) {
                 this.currentAnchor.block = __currentBlock
             }
             let { each } = __currentBlock;
-            if (each) {
+            if (each && !__each) {
                 let { body } = path.node;
                 let incremental = t.updateExpression("++", each);
                 body.push(incremental);

@@ -1,14 +1,12 @@
-<div>
-    if(value){
-        <h1 class="hello {active?'active':''}">t`Hello`</h1>
-    }else{
-        <h1>t`Esto es una prueba`</h1>
-    }  
-</div>
 <ul>
     items.forEach(car=>{
         let {name} = car;
         <li on:click="click(name,active)">t`{name}`</li>
+        if(name){
+            <div>t`Hola`</div>
+        }else{
+            <div>t`Hola1`</div>
+        }
     });
 </ul>
 <style>
