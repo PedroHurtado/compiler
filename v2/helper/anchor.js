@@ -1,26 +1,8 @@
-const t = require('@babel/types');
-
-const ZERO = t.numericLiteral(0);
-const VDOM = t.identifier('vdom');
-const ANCHOR = t.identifier('anchor');
-
-
-
-function generateAnchor(id) {
-    return t.stringLiteral(`anchor${id}`);
-}
-function generateVDomAnchor(anchor) {
-    let anchorcall = t.callExpression(
-        t.memberExpression(VDOM, ANCHOR),
-        [anchor]
-    );
-    return t.expressionStatement(anchorcall);
-}
-
-
+const {generateAnchor,generateVDomAnchor} =require('./generators').anchor;
 class Anchor {
     constructor() {
         this._block;
+        this._parentBlock;
         this._index=0;
     }
     enter() {
@@ -29,6 +11,12 @@ class Anchor {
         this._index++
         return current;
     }
+    set parentBlock(value){
+        this._parentBlock = value;
+    }
+    get parentBlock(){
+        return this._parentBlock; 
+    }
     set block(value) {
         this._block = value;
     }
@@ -36,7 +24,7 @@ class Anchor {
         return this._block;
     }
     get statement() {
-        return generateVDomAnchor(this._key)
+        return generateVDomAnchor(this)
     }
     get key() {
         return this._key;

@@ -1,17 +1,15 @@
-const t = require('@babel/types');
-const ZERO = t.numericLiteral(0);
+const {GENERATENUMERIC,GENERATESTRING} = require('./constans');
 
 class Block {
     constructor() {
         this._each = null;
         this._parent=null;
         this._index = 0;
-        this._each=null;
         this._key = null;
     }
     enter() {
         let current= new Block();
-        current._key = t.numericLiteral(this._index);
+        current._key = GENERATENUMERIC(this._index);
         this._index++;
         return current;
     }
@@ -21,7 +19,7 @@ class Block {
         }
     }
     get parent() {
-        return t.stringLiteral(this._parent);
+        return GENERATESTRING(this._parent);
     }
     get key() {
         return this._key;

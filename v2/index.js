@@ -4,7 +4,7 @@ const path = require('path');
 const interpolate = require('./interpolate');
 const domfunctions = require('./donfunctions');
 const attributes = require('./attributes');
-const visitorender=require('./visitorrender');
+const parseCode=require('./parse');
 const {VDom} = require('./vdom');
 
 let filename = './v2/x.html';
@@ -117,7 +117,7 @@ position += buffer.write(end, position)
 
 let newBuffer = Buffer.alloc(position);
 buffer.copy(newBuffer, 0, 0, position);
-let code = visitorender(newBuffer.toString('utf8'));
+let code = parseCode(newBuffer.toString('utf8'));
 {
     
     let newFilename = path.format({
