@@ -1,7 +1,7 @@
 const t = require('@babel/types');
 const {createMeta}=require('./meta');
 const {VDOM,ANCHOR,GENERATESTRING,ZERO,SCOPE} = require('./constans');
-
+const EACH_INDEX = 'each'
 
 //anchor
 function generateAnchor(id) {
@@ -18,7 +18,7 @@ function generateVDomAnchor(anchor) {
 //block each
 function generateEach(path) {
     return path.scope.generateUidIdentifier(
-        GENERATESTRING("each_index")
+        EACH_INDEX
     );
 }
 function generateVariableEach(each) {
@@ -34,6 +34,9 @@ function generateUpdateEach(each){
 function generateGlobalVar(variables){
     return t.variableDeclaration("var", variables);
 }
+function generateArrayExpression(items){
+    return t.arrayExpression(items)
+}
 module.exports={
     anchor:{
         generateAnchor,
@@ -45,5 +48,6 @@ module.exports={
         generateMemberScope,
         generateUpdateEach,
         generateGlobalVar
-    }
+    },
+    generateArrayExpression
 }
