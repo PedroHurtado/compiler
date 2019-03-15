@@ -134,23 +134,5 @@ const visitor = {
             }
         }
     },
-    /*IfStatement: {
-        enter(path) {
-            if (isPrincipalIf(path)) {
-                let { node } = path;
-                let { block } = getMeta(path);
-                let anchor = this.anchor.enter();
-                anchor.parentBlock = block;
-                createMeta(node, { anchor: anchor, block: block });
-                path.traverse(visitorBlock, { anchor: anchor });
-            }
-        },
-        exit(path) {
-            if (isPrincipalIf(path)) {
-                let { statement } = path.node[META].anchor;
-                //path.insertAfter(statement);
-            }
-        }
-    }*/
 };
 module.exports = visitor;
