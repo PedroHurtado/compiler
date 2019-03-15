@@ -21,9 +21,9 @@
         let button =document.querySelector('button');
         button.addEventListener('click',()=>{
             //data.value = !data.value;
-            data.items.unshift({ name: 'Loco' }) //bug
+            //data.items.unshift({ name: 'Loco' }) //bug
             //data.items[0].name = "Jose"; // bug
-            //data.items.push({ name: 'Loco' });
+            data.items.push({ name: 'Loco' });
 
             App(data,target,0);
         });
