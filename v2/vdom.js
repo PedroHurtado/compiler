@@ -1,163 +1,193 @@
 class VDom {
-    constructor(first) {
+    constructor(first, target) {
         this.first = first;
-        this.last = new Map();
+        this.target = target;
         this.inizialice();
     }
     inizialice() {
-        this.current = new Map();
-        this.dom = new Map();
-        this.currentNode = null;
         this.default = {
             tag: null,
-            action: 'c',
+            action: "c",
             state: null,
-            anchor: null,
             parent: null,
+            parentKey: null,
+            children: null,
+            index: 0
         };
+        this.current = new Map();
+        this.current.set("0.0.0.target", this.getDefault({ action: "" }));
+        this.last = new Map(this.current);
+        this.dom = new Map();
+        this.currentNode = null;
+        if (!this.first) {
+            this.hidrate(this.target);
+        }
+    }
+    hidrate(target) {
+        for (let value of target.childNodes) {
+            let { __key, __state } = value;
+            if (value.__key) {
+                this.last.set(
+                    __key,
+                    this.getDefault({ node: value, state: __state, action: "" })
+                );
+                if (value.childNodes) {
+                    this.hidrate(value);
+                }
+            }
+        }
     }
     generateKey(...key) {
-        return key.join('.');
+        return key.join(".");
     }
-    generateParent(parent) {
-        return Array.isArray(parent) ? this.generateKey(parent) : parent;
+    generateParentKey(parent) {
+        return Array.isArray(parent) ? parent.join(".") : parent;
     }
     getDefault(init) {
         let defaultNode = Object.assign({}, this.default, init);
-        defaultNode.state = {};
+        defaultNode.children = [];
+        Object.defineProperty(defaultNode, "next", {
+            get: function () {
+                let sibiling = this.parent.children[this.index + 1];
+                if (sibiling && sibiling.node.parentNode) {
+                    return sibiling.node;
+                }
+                return null;
+            }
+        });
         return defaultNode;
     }
-    createCurrentNode(key, tag, anchor, parent) {
+    createCurrentNode(key, tag, parent, parentKey) {
         if (this.first) {
-            return this.getDefault({ tag, anchor, parent });
-        }
-        else {
-            let current = this.last.get(key)
+            return this.getDefault({ tag, parent, parentKey });
+        } else {
+            let current = this.last.get(key);
             if (current) {
                 this.last.delete(key);
                 return current;
             }
-            return this.getDefault({ tag, anchor, parent });
+            return this.getDefault({ tag, parent, parentKey });
         }
     }
-    setParent(parentKey, key, node) {
-        let current = this.dom.get(parentKey);
-        if (current) {
-            current.children.push(node);
-        }
-        let parent = this.current.get(parentKey)
-        if(parent){
-            parent = parent.node;
-        } 
-        this.dom.set(key, { node, parent, parentKey, children: [] })
-
+    addDom(key, currentNode) {
+        currentNode.action = "";
+        this.dom.set(key, currentNode);
     }
-    append(block, key, anchor, parent, tagKey, tag) {
-        let _key = this.generateKey(block, key, tagKey);
-        let _parent = this.generateParent(parent);
-        this.currentNode = this.createCurrentNode(
-            _key,
-            tag,
-            anchor,
-            this.generateParent(parent)
-        );
-        let { action, state, } = this.currentNode;
-        if (action === 'c') {
-            this.current.set(_key, this.currentNode);
+    getParent(parent) {
+        return this.current.get(parent);
+    }
+    append(block, key, subkey, tagKey, parentKey, tag) {
+        key = this.generateKey(block, key, subkey, tagKey);
+        parentKey = this.generateParentKey(parentKey);
+        let parent = this.getParent(parentKey);
+        this.currentNode = this.createCurrentNode(key, tag, parent, parentKey);
+        let { action } = this.currentNode;
+        if (action === "c") {
             this.currentNode.node = create(tag);
-            this.setParent(_parent, _key, this.currentNode.node);
-        } else {
-            this.current.set(_key, this.currentNode);
+            this.currentNode.node.__key = key;
+            this.addDom(key, this.currentNode);
         }
-
+        this.current.set(key, this.currentNode);
+        this.currentNode.index = parent.children.push(this.currentNode) - 1;
     }
 
-    appendText(block, key, anchor, sealed, parent, tagKey, ...value) {
-        let _key = this.generateKey(block, key, tagKey);
-        let _value = value.join('');
-        let _parent = this.generateParent(parent)
-        this.currentNode = this.createCurrentNode(
-            _key,
-            'text',
-            anchor,
-            _parent
-        );
-        let { action, state, node, } = this.currentNode;
+    appendText(block, key, subkey, tagKey, parentKey, sealed, ...values) {
+        key = this.generateKey(block, key, subkey, tagKey);
+        parentKey = this.generateParentKey(parentKey);
+        let value = values.join("");
+        let parent = this.getParent(parentKey);
+        this.currentNode = this.createCurrentNode(key, "text", parent, parentKey);
+        let { action, node } = this.currentNode;
 
-        if (action === 'c') {
-            state.text = {
-                value: _value,
-            };
-            this.current.set(_key, this.currentNode);
-            this.currentNode.node = createText(_value);
-            this.setParent(_parent, _key, this.currentNode.node);
-        } else if (sealed === 0) {
-            if (state.text.value !== _value) {
-                state.text.value = _value;
-                updateText(node, _value);
+        if (action === "c") {
+            this.currentNode.node = createText(value);
+            this.currentNode.node.__key = key;
+            if (sealed === 0) {
+                let state = (this.currentNode.state = this.currentNode.state || {});
+                state.text = {
+                    value: value
+                };
+                this.currentNode.node.__state = state;
             }
-            this.current.set(_key, this.currentNode);
-        }
-
-    }
-    appendAttribute(sealed, attr, ...value) {
-        let _value = value.join('');
-        let {
-            action,
-            state,
-            node,
-        } = this.currentNode;
-
-        if (action === 'c') {
-            state[attr] = {
-                value: _value
-            };
-            setAttribute(node, attr, _value);
+            this.addDom(key, this.currentNode);
         } else if (sealed === 0) {
+            let state = (this.currentNode.state = this.currentNode.state || {});
+            if (state.text.value !== value) {
+                state.text.value = value;
+                updateText(node, value);
+            }
+        }
+        this.current.set(key, this.currentNode);
+        this.currentNode.index = parent.children.push(this.currentNode) - 1;
+    }
+    appendAttribute(sealed, attr, ...values) {
+        let value = values.join("");
+        let { action, state, node } = this.currentNode;
+
+        if (action === "c") {
+            if (sealed === 0) {
+                let state = this.currentNode.state = this.currentNode.state || {};
+                state[attr] = {
+                    value: value
+                };
+                node.__state = state;
+            }
+            setAttribute(node, attr, value);
+        } else if (sealed === 0) {
+            let state = this.currentNode.state = this.currentNode.state || {};
             let old = state[attr];
-            if (old.value != _value) {
-                old.value = _value;
-                setAttribute(node, attr, _value);
+            if (old.value != value) {
+                old.value = value;
+                setAttribute(node, attr, value);
             }
         }
     }
-    appendEvent() {
-
-    }
-    anchor(block, key, anchor) {
-
-    }
-    reduceDom(target) {
+    appendEvent() { }
+    createNodes(target) {
         let domParents = [];
 
         for (let [key, value] of this.dom) {
-            let {
-                node,
-                parentKey,
-                children
-            } = value;
-           children.forEach(child => {
-                append(node, child, null);
+            let { node, parentKey, children } = value;
+            children.forEach(child => {
+                append(node, child.node, child.next);
+                child = null;
             });
-
             if (!this.dom.get(parentKey)) {
+                domParents.push(value);
+            }
+        }
+        domParents.forEach(item => {
+            let { node, parent } = item;
+            if (parent.node) {
+                append(parent.node, node, item.next);
+            } else {
+                append(target, node, item.next);
+            }
+        });
+    }
+    removeNodes() {
+        let domParents = [];
+        this.last.delete("0.0.0.target");
+        for (let [key, value] of this.last) {
+            let { node, parentKey } = value;
+            if (!this.last.get(parentKey)) {
                 domParents.push(node);
             }
         }
         domParents.forEach(node => {
-            append(node.parent || target, node);
+            remove(node);
         });
     }
-    close(target) {
-        this.first = 0;
-        for (let [key, value] of this.current) {
-            value.action = ''
-        }
-        this.reduceDom(target);
-        this.last = new Map(this.current);
-        this.inizialice();
+    close() {
+        this.removeNodes();
+        this.createNodes(this.target);
+        this.last = null;
+        this.current = null;
+        this.default = null;
+        this.currentNode = null;
+        this.dom = null;
+        this.target = null;
     }
-
 }
 
 module.exports.VDom = VDom;

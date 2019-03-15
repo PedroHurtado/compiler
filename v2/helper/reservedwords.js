@@ -5,6 +5,7 @@ const APPENDATTRIBUTE ='appendAttribute';
 const APPENDEVENT = 'appendEvent';
 const ANCHOR = 'anchor';
 const VDOM = 'vdom';
+const VDOMINSTANCE='VDom';
 const FOREACH = 'forEach'
 
 module.exports={
@@ -15,6 +16,7 @@ module.exports={
     APPENDEVENT,
     ANCHOR,
     VDOM,
-    FOREACH
+    FOREACH,
+    VDOMINSTANCE
 }
 

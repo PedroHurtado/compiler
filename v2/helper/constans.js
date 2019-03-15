@@ -13,7 +13,6 @@ const GENERATEIDENTIFIER = (identifier) => t.identifier(identifier);
 
 
 const VDOM = t.identifier('vdom');
-const ANCHOR = t.identifier('anchor');
 const SCOPE = t.identifier('$');
 
 
@@ -26,6 +25,5 @@ module.exports ={
     ISSEALDED,
     GENERATEIDENTIFIER,
     VDOM,
-    ANCHOR,
     SCOPE
 }

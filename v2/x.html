@@ -1,18 +1,20 @@
+if(value){
+    <div>t`Hola`</div>
+}else{
+    <div>t`Hola1`</div>
+}
 <ul>
     items.forEach(car=>{
         let {name} = car;
-        <li on:click="click(name,active)">t`{name}`</li>
-        <ul>
-            let characters = name.split('');
-            characters.forEach(character=>{
-                <li>t`{character}`</li>
-            });
-        </ul>
-        if(name){
-            <div>t`Hola`</div>
-        }else{
-            <div>t`Hola1`</div>
-        }
+        let characters = name.split('');
+        <li on:click="click(name,active)">
+            t`{name}`
+            <ul>
+                characters.forEach(character=>{
+                    <li>t`{character}`</li>
+                });
+            </ul>
+        </li>
     });
 </ul>
 <style>

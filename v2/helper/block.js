@@ -6,6 +6,7 @@ class Block {
         this._parent=null;
         this._index = 0;
         this._key = null;
+        this._subKey = null;
     }
     enter() {
         let current= new Block();
@@ -20,6 +21,12 @@ class Block {
     }
     get parent() {
         return GENERATESTRING(this._parent);
+    }
+    set subKey(value){
+        this._subKey = value;
+    }
+    get subKey(){
+        return this._subKey || ZERO;
     }
     get key() {
         return this._key;

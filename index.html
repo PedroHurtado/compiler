@@ -10,20 +10,24 @@
 
 <body>
    
-    <div class="main">
-
-    </div>
-  
+    <button>changed</button>
+    <div class="main"></div>
     <script type="module">
         import App  from './v2/x.js';
         import data from './v2/data.js';
         let target = document.querySelector('.main');
-        let dom = App(data);
-        dom.close(target);
+        let dom = App(data,target,1);
         //update
-        //data.value = false;
-        //dom=App(data);
-        //dom.close(target);
+        let button =document.querySelector('button');
+        button.addEventListener('click',()=>{
+            //data.value = !data.value;
+            data.items.unshift({ name: 'Loco' }) //bug
+            //data.items[0].name = "Jose"; // bug
+            //data.items.push({ name: 'Loco' });
+
+            App(data,target,0);
+        });
+        
     </script>
 </body>
 

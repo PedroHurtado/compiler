@@ -1,20 +1,20 @@
 const { META, createMeta } = require("./meta");
-const { GENERATESTRING, ISSEALDED, GENERATENUMERIC,ZERO } = require("./constans");
+const { GENERATESTRING, ISSEALDED, GENERATENUMERIC,ZERO,NULL } = require("./constans");
 const {generateArrayExpression} = require('./generators')
-const TARGET = GENERATESTRING("0.0.target");
+const TARGET = GENERATESTRING("0.0.0.target");
 const LITERAL = "Literal";
 
 let nodes;
 function getParent(parent, key, block) {
   let _parent = nodes.get(parent);
   let value = {
-    parent: [block.key.value, block.nodeIndex.value, key],
+    parent: [block.key.value,block.subKey.value,block.nodeIndex.value, key],
     each: block.each,
     extraEach: null
   };
   nodes.set(key, value);
   if (block.each) {
-    value.extraEach = [block.key, block.each, GENERATESTRING(key)];
+    value.extraEach = [block.key, block.subKey, block.each, GENERATESTRING(key)];
   }
   if (!_parent) {
     return TARGET;
@@ -31,33 +31,33 @@ function hasExpression(args) {
   });
   return ISSEALDED(exp.length);
 }
-function transformText(args, block, anchor) {
+function transformText(args, block) {
   let [parent, key, ...next] = args;
   block.parent = parent.value;
   parent = getParent(parent.value, key.value, block);
   let sealed = hasExpression(args);
   let newArgs = [
     block.key,
+    block.subKey,
     block.each || block.nodeIndex,
     key,
-    anchor,
     parent,
     sealed,
     ...next
   ];
   return newArgs;
 }
-function transformAppend(args, block, anchor) {
-  let [parent, key, tag] = args;
+function transformAppend(args, block) {
+  let [parent, key, ...next] = args;
   block.parent = parent.value;
   parent = getParent(parent.value, key.value, block);
   let newArgs = [
     block.key,
+    block.subKey,
     block.each || block.nodeIndex,
     key,
     parent,
-    anchor,
-    tag
+    ...next
   ];
   return newArgs;
 }
@@ -66,11 +66,7 @@ function transformAttribute(args) {
   let newArgs = [sealed, ...args];
   return newArgs;
 }
-function transformAnchor(args, { anchor }) {
-  let { block, parentBlock, key } = anchor;
-  let parent = getParent(block.parent.value, key.value, block);
-  return [parentBlock.key, parentBlock.each || ZERO, ...args, parent];
-}
+
 
 function initNodes() {
   nodes = new Map();
@@ -78,7 +74,6 @@ function initNodes() {
 module.exports = {
   transformAppend,
   transformText,
-  transformAnchor,
   transformAttribute,
   initNodes
 };

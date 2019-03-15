@@ -11,6 +11,9 @@ function getMeta(path) {
     let { node } = path.findParent((path) => path.isBlockStatement()) || path.node;
     return node[META];
 }
+function getNodeMeta(node){
+    return node[META] || {};
+}
 function getFunctionName(callee) {
     if (t.isIdentifier(callee)) {
         return callee.name;
@@ -22,5 +25,6 @@ module.exports={
     META,
     createMeta,
     getMeta,
+    getNodeMeta,
     getFunctionName
 }

@@ -70,7 +70,7 @@ position+=buffer.write(VDom.toString(), position)
 
 
 
-let openFunction = `const vdom = new VDom(1); function render ($){`;
+let openFunction = `function render ($,target,__first){ var vdom = new VDom(__first,target);`;
 position += buffer.write(openFunction, position);
 
 (function write(nodes, currentElement) {
@@ -109,7 +109,7 @@ position += buffer.write(openFunction, position);
     });
 }(nodes, 'target'));
 
-let end = ' return vdom;}'
+let end = ' vdom.close(); vdom=null}'
 position += buffer.write(end, position)
 
 
