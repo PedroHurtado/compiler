@@ -29,9 +29,6 @@ function createEvent(node, event, handler) {
 function removeEvent(node,event,handler){
     node.removeEventListener(event,handler);
 }
-function createComment(){
-   return document.createComment('');
-}
 module.exports = {
     CREATE: create,
     APPEND: append,
