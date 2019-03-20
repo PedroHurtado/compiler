@@ -17,19 +17,25 @@ class VDom {
         this.current = new Map();
         this.current.set("0.0.0.target", this.getDefault({ action: "" }));
         this.last = new Map(this.current);
-        this.dom = new Map();
+        this.created = new Map();
         this.currentNode = null;
         if (!this.first) {
             this.hidrate(this.target);
         }
     }
     hidrate(target) {
+        let parentKey = target.__key;
         for (let value of target.childNodes) {
             let { __key, __state } = value;
             if (value.__key) {
                 this.last.set(
                     __key,
-                    this.getDefault({ node: value, state: __state, action: "" })
+                    this.getDefault({
+                        node: value,
+                        state: __state,
+                        action: "",
+                        parentKey:parentKey
+                    })
                 );
                 if (value.childNodes) {
                     this.hidrate(value);
@@ -70,7 +76,7 @@ class VDom {
         }
     }
     addDom(key, currentNode) {
-        this.dom.set(key, currentNode);
+        this.created.set(key, currentNode);
     }
     getParent(parent) {
         return this.current.get(parent);
@@ -141,27 +147,27 @@ class VDom {
             }
         }
     }
-    appendEvent(event,handler,scope) {
-        let {node,action} = this.currentNode;
+    appendEvent(event, handler, scope) {
+        let { node, action } = this.currentNode;
         let events = node.__events = node.__events || {};
-        if(action === 'c'){
-          events[event]={handler,scope};
-          createEvent(node,event,handler);
+        if (action === 'c') {
+            events[event] = { handler, scope };
+            createEvent(node, event, handler);
         }
-        else{
-          events[event].scope = scope;
+        else {
+            events[event].scope = scope;
         }
-     }
+    }
     createNodes(target) {
         let domParents = [];
 
-        for (let [key, value] of this.dom) {
+        for (let [key, value] of this.created) {
             let { node, parentKey, children } = value;
             children.forEach(child => {
                 append(node, child.node, child.next);
                 child = null;
             });
-            if (!this.dom.get(parentKey)) {
+            if (!this.created.get(parentKey)) {
                 domParents.push(value);
             }
         }
@@ -174,12 +180,12 @@ class VDom {
             }
         });
     }
-    removeEvents(node){
+    removeEvents(node) {
         let events = node.__events;
-        if(events){
-            for(let key in events){
-                let {handler,scope} = events[key];
-                removeEvent(node,key, handler);
+        if (events) {
+            for (let key in events) {
+                let { handler, scope } = events[key];
+                removeEvent(node, key, handler);
             }
             node.__events = null;
         }
@@ -205,7 +211,7 @@ class VDom {
         this.current = null;
         this.default = null;
         this.currentNode = null;
-        this.dom = null;
+        this.created = null;
         this.target = null;
     }
 }

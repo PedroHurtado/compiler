@@ -11,7 +11,9 @@
 <body>
    
     <button>changed</button>
-    <div class="main"></div>
+    <div class="main">
+        <x-foo></x-foo>
+    </div>
 
          <script type="module">
         import App  from './v2/x.js';
@@ -23,6 +25,7 @@
         button.addEventListener('click',()=>{
             data.value = !data.value;
             data.items.pop();
+            //data.items[0].name = "Isidro";
             //data.items[0].name = "Jose"; // bug
             //data.items.push({ name: 'Loco' });
 

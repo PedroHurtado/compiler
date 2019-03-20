@@ -5,16 +5,16 @@ if(value){
 }
 <ul>
     items.forEach(car=>{
-        let {name} = car;
-        let characters = name.split('');
-        <li on:click="click(name,active)">
-            t`{name}`
-            <ul>
-                characters.forEach(character=>{
-                    <li>t`{character}`</li>
-                });
-            </ul>
-        </li>
+    let {name} = car;
+    let characters = name.split('');
+    <li on:click="click(name,active)">
+        t`{name}`
+        <ul>
+            characters.forEach(character=>{
+            <li>t`{character}`</li>
+            });
+        </ul>
+    </li>
     });
 </ul>
 <style>
@@ -31,15 +31,13 @@ if(value){
     }
 </style>
 <script>
-    export default {
-        value: true,
-        text: 'Almo',
-        active: 1,
-        items: [
-            { name: 'Pedro' }, { name: 'Loco' }
-        ],
-        click: (value) => {
-            console.log(`${value} está bastante cuerdo....`)
-        },
-    }
+    export default class App {
+        constructor() {
+
+        }
+        click(name) {
+
+        }
+
+    };
 </script>
