@@ -8,15 +8,19 @@ const visitorRender = {
         let { node } = path;
         let { name } = node.id;
         if (name === 'render') {
+            let { body } = node.body
             let scope = {
                 variables: [],
                 block: new Block(),
-                globalScope: new Set(globalScope)
+                globalScope: new Set(globalScope),
+                events:[],
             }
             path.traverse(visitor, scope)
             path.stop();
+            if(scope.events.length){
+                body.unshift(...scope.events);
+            }
             if (scope.variables.length) {
-                let { body } = node.body
                 body.unshift(generateGlobalVar(scope.variables));
             }
 

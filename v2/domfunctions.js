@@ -38,6 +38,5 @@ module.exports = {
     CLASS:appendClass,
     CREATEEVENT: createEvent,
     REMOVEEVENT:removeEvent,
-    COMMENT:createComment,
     REMOVE:remove,
 }

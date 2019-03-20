@@ -1,6 +1,7 @@
 const t = require('@babel/types');
-const {createMeta, getMeta, getNodeMeta,getFunctionName } = require('./helper/meta');
-
+const { createMeta, getMeta, getNodeMeta, getFunctionName } = require('./helper/meta');
+const visitorEvents = require('./helper/events/visitorevents');
+const appendEvent=require('./helper/events/transformevents');
 const {
     transformAppend,
     transformText,
@@ -54,31 +55,31 @@ const visitor = {
             let { node } = path;
             let name = getFunctionName(node.callee);
             if (name === FOREACH) {
-                let { block,each } = getMeta(path);
+                let { block, each } = getMeta(path);
                 let newEach = generateEach(path);
                 this.variables.push(generateVariable(newEach));
-                if(!each){
+                if (!each) {
                     createMeta(node, { block: block });
                     path.traverse(visitorBlock, {
                         each: newEach,
                         incrementEach: true
                     });
-                }else {
+                } else {
                     let subKey = generateSubKey(path);
-                    createMeta(node, { block: block,subKey:subKey });
+                    createMeta(node, { block: block, subKey: subKey });
                     this.variables.push(generateVariable(subKey));
                     path.traverse(visitorBlock, {
                         each: newEach,
                         incrementEach: true,
-                        subKey:subKey
+                        subKey: subKey
                     });
                 }
-                
+
             }
         },
         exit(path) {
             let { block, anchor, each } = getMeta(path);
-            if(anchor){
+            if (anchor) {
                 anchor.block = block;
             }
             let node = path.node;
@@ -95,13 +96,19 @@ const visitor = {
                 node.arguments = transformAttribute(args);
                 path.skip();
             } else if (name === FOREACH) {
-                let {subKey} = getNodeMeta(node);
-                if(subKey){
+                let { subKey } = getNodeMeta(node);
+                if (subKey) {
                     this.globalScope.add(subKey.name);
                     path.insertAfter(generateUpdateVar(subKey));
                 }
                 path.skip();
             } else if (name === 'appendEvent') {
+                let scope = { node: node, keys: new Set() };
+                path.traverse(visitorEvents, scope);
+                let {_arguments,statements} = appendEvent(path,args,scope.keys);
+                this.events.push(...statements);
+                node.arguments = _arguments;
+                path.skip();
             }
         }
     },
@@ -120,7 +127,7 @@ const visitor = {
         enter(path) {
             let block = this.block.enter();
             let { node } = path;
-            let { each,subKey } = getNodeMeta(node);
+            let { each, subKey } = getNodeMeta(node);
             block.each = each;
             block.subKey = subKey;
             createMeta(node, { block: block });

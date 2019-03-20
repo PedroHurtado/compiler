@@ -12,7 +12,8 @@
    
     <button>changed</button>
     <div class="main"></div>
-    <script type="module">
+
+         <script type="module">
         import App  from './v2/x.js';
         import data from './v2/data.js';
         let target = document.querySelector('.main');
@@ -20,15 +21,30 @@
         //update
         let button =document.querySelector('button');
         button.addEventListener('click',()=>{
-            //data.value = !data.value;
-            //data.items.unshift({ name: 'Loco' }) //bug
+            data.value = !data.value;
+            data.items.pop();
             //data.items[0].name = "Jose"; // bug
-            data.items.push({ name: 'Loco' });
+            //data.items.push({ name: 'Loco' });
 
             App(data,target,0);
         });
         
     </script>
+
+    <!--
+
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/incrementaldom/0.5.1/incremental-dom.js"></script>
+    <script>
+       const {patch,elementOpen,elementClose,text}=IncrementalDOM;
+       const target = document.querySelector('.main');
+       patch(target,function(){
+           elementOpen('div');
+                text("Hello");
+           elementClose('div');
+       })
+    </script>
+    -->
 </body>
 
 </html>

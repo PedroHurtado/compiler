@@ -70,7 +70,6 @@ class VDom {
         }
     }
     addDom(key, currentNode) {
-        currentNode.action = "";
         this.dom.set(key, currentNode);
     }
     getParent(parent) {
@@ -142,7 +141,17 @@ class VDom {
             }
         }
     }
-    appendEvent() { }
+    appendEvent(event,handler,scope) {
+        let {node,action} = this.currentNode;
+        let events = node.__events = node.__events || {};
+        if(action === 'c'){
+          events[event]={handler,scope};
+          createEvent(node,event,handler);
+        }
+        else{
+          events[event].scope = scope;
+        }
+     }
     createNodes(target) {
         let domParents = [];
 
@@ -161,15 +170,26 @@ class VDom {
             if (parent.node) {
                 append(parent.node, node, item.next);
             } else {
-                append(target, node, item.next);
+                append(this.target, node, item.next);
             }
         });
+    }
+    removeEvents(node){
+        let events = node.__events;
+        if(events){
+            for(let key in events){
+                let {handler,scope} = events[key];
+                removeEvent(node,key, handler);
+            }
+            node.__events = null;
+        }
     }
     removeNodes() {
         let domParents = [];
         this.last.delete("0.0.0.target");
         for (let [key, value] of this.last) {
             let { node, parentKey } = value;
+            this.removeEvents(node);
             if (!this.last.get(parentKey)) {
                 domParents.push(node);
             }
@@ -180,7 +200,7 @@ class VDom {
     }
     close() {
         this.removeNodes();
-        this.createNodes(this.target);
+        this.createNodes();
         this.last = null;
         this.current = null;
         this.default = null;
