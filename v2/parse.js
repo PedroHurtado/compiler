@@ -10,7 +10,9 @@ const generateCode = function (ast) {
 }
 const parseCode = function (code) {
   initNodes();
-  let ast = parser(code);
+  let ast = parser(code,{
+    sourceType:'module'
+  });
   traverse(ast, visitorRender);
   return generateCode(ast);
 }

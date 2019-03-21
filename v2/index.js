@@ -2,10 +2,9 @@ const parse5 = require('parse5');
 const fs = require('fs');
 const path = require('path');
 const interpolate = require('./interpolate');
-const domfunctions = require('./domfunctions');
 const attributes = require('./attributes');
 const parseCode=require('./parse');
-const {VDom} = require('./vdom');
+
 
 let filename = './v2/x.html';
 let exportName = path.parse(filename).name;
@@ -62,15 +61,24 @@ function isTextContent(text) {
 
 let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
 let position = 0;
-for(key in domfunctions){
-    let value = domfunctions[key].toString()
-    position += buffer.write(value, position);    
+
+position += buffer.write(`import { VDom, define, decorate } from './dom/index.js'`,position)
+if(script.length>0){
+    let [chilNode] = script[0].childNodes;
+    let value = chilNode.value;
+    if(value){
+        position+=buffer.write(value,position);
+    }
+    
 }
-position+=buffer.write(VDom.toString(), position)
 
 
 
-let openFunction = `function render ($,target,__first){ var vdom = new VDom(__first,target);`;
+
+let openFunction = `function render ($){ 
+    var first = $.first;
+    var target = $.target || $;
+    var vdom = new VDom(first,target);`;
 position += buffer.write(openFunction, position);
 
 (function write(nodes, currentElement) {
