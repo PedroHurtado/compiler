@@ -8,7 +8,7 @@ class Define {
   add(tag, ctor) {
     let customElement = ctor.prototype instanceof htmlElement;
     if (customElement && (supportCustomElements && !customElements.get(tag))) {
-      customElement.define(tag, ctor);
+      customElements.define(tag, ctor);
     }
     this.types.set(tag, {ctor,customElement});
   }
