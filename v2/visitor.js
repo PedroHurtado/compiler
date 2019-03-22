@@ -20,6 +20,7 @@ const { NULL } = require('./helper/constans');
 
 const {
     APPEND,
+    APPPENDCOMPONENT,
     APPENDATTRIBUTE,
     APPENDEVENT,
     APPENDTEXT,
@@ -86,7 +87,7 @@ const visitor = {
             let args = node.arguments;
             let name = getFunctionName(node.callee);
 
-            if (name === APPEND) {
+            if (name === APPEND || name===APPPENDCOMPONENT) {
                 node.arguments = transformAppend(args, block);
                 path.skip();
             } else if (name === APPENDTEXT) {

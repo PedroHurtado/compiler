@@ -10,10 +10,10 @@ class Define {
     }
     const htmlElement = self.HTMLElement || noop;
     const customElement = ctor.prototype instanceof htmlElement;
+    this.types.set(tag, {ctor,customElement});
     if (customElement && (supportCustomElements && !self.customElements.get(tag))) {
       self.customElements.define(tag, ctor);
     }
-    this.types.set(tag, {ctor,customElement});
   }
   get(tag) {
     return this.types.get(tag);

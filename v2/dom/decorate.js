@@ -1,4 +1,5 @@
 function changes(data, instance) {
+    if(!data) return;
     let changes = false;
     for (let key in data) {
         let change =
@@ -13,17 +14,20 @@ function changes(data, instance) {
     return changes;
 }
 
-function set(data) {
-    if (this.first === undefined) {
-        this.first = 1;
-    } else {
-        this.first = 0;
-    }
-    if(changes(data,this)){
-       this.render(this);
+function set(render) {
+    return function (data) {
+        if (this.first === undefined) {
+            this.first = 1;
+            changes(data, this)
+            render(this);
+        } else {
+            this.first = 0;
+            if (changes(data, this){
+                render(this);
+            }
+        }
     }
 }
-export function decorate(ctor,render) {
-    ctor.prototype.set = set;
-    ctor.prototype.render = render;
+export function decorate(ctor, render) {
+    ctor.prototype.set = set(render);
 }

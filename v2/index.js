@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const interpolate = require('./interpolate');
 const attributes = require('./attributes');
-const parseCode=require('./parse');
+const parseCode = require('./parse');
 
 
 let filename = './v2/x.html';
@@ -24,7 +24,7 @@ let script = childNodes.filter(
     }
 );
 let style = childNodes.filter(
-    node=> {
+    node => {
         let { tagName } = node;
         return tagName && tagName === 'style'
     }
@@ -58,22 +58,22 @@ function isTextContent(text) {
     }
     return null;
 }
+function isWebComponent(node) {
+    return node.tagName.indexOf("-") !== -1 ||
+        node.attrs.filter(attr => attr.name === 'is').length > 0;
+}
 
 let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
 let position = 0;
 
-position += buffer.write(`import { VDom, define, decorate } from './dom/index.js'`,position)
-if(script.length>0){
+position += buffer.write(`import { VDom, define, decorate } from './dom/index.js'`, position)
+if (script.length > 0) {
     let [chilNode] = script[0].childNodes;
     let value = chilNode.value;
-    if(value){
-        position+=buffer.write(value,position);
+    if (value) {
+        position += buffer.write(value, position);
     }
-    
 }
-
-
-
 
 let openFunction = `function render ($){ 
     var first = $.first;
@@ -86,26 +86,42 @@ position += buffer.write(openFunction, position);
         let { tagName, value, attrs, childNodes } = element;
         if (tagName) {
             let item = createItem(tagName);
-            let appenNode = `vdom.append('${currentElement}','${item}','${tagName}');`;
-            position += buffer.write(appenNode, position);
-            let processedAttributes = attributes(attrs);
-            processedAttributes.forEach((attribute) => {
-                let attr = attribute();
-                position += buffer.write(attr, position);
-            });
+            if (isWebComponent(element)) {
+                let appenNode = `vdom.appendComponent('${currentElement}','${item}','${tagName}');`;
+                position += buffer.write(appenNode, position);
+                let {processed,properties} = attributes(attrs,true);
+                processed.forEach((attribute) => {
+                    position += buffer.write(attribute, position);
+                });
+                if(properties){
+                    position+=buffer.write(`vdom.inputs(${properties});`,position);
+                }else{
+                    position+=buffer.write(`vdom.inputs(null);`,position);
+                }
+
+            }
+            else {
+                let appenNode = `vdom.append('${currentElement}','${item}','${tagName}');`;
+                position += buffer.write(appenNode, position);
+                let {processed} = attributes(attrs);
+                processed.forEach((attribute) => {
+                    position += buffer.write(attribute, position);
+                });
+            }
             if (element.childNodes && element.childNodes.length > 0) {
                 write(element.childNodes, item);
             }
+            position += buffer.write('vdom.closeElement();', position);
         }
         else if (value) {
             let str = isTextContent(value);
             if (str) {
-                let item = createItem('text'),values,params;
+                let item = createItem('text'), values, params;
                 values = interpolate(str);
                 params = values.map(c => c.expression ? c.text : `'${c.text}'`).join(', ')
-                
+
                 let callExpression = `vdom.appendText('${currentElement}','${item}', ${params});`;
-                
+
                 position += buffer.write(callExpression, position);
             }
             else {
@@ -127,10 +143,10 @@ let newBuffer = Buffer.alloc(position);
 buffer.copy(newBuffer, 0, 0, position);
 let code = parseCode(newBuffer.toString('utf8'));
 {
-    
+
     let newFilename = path.format({
-        name:`./v2/${exportName}`,
-        ext:'.js',
+        name: `./v2/${exportName}`,
+        ext: '.js',
     });
     fs.writeFileSync(
         newFilename,

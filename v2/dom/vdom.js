@@ -138,6 +138,24 @@ export class VDom {
     this.current.set(key, this.currentNode);
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
   }
+  appendComponent(block, key, subkey, tagKey, parentKey, tag){
+      this.append(block, key, subkey, tagKey, parentKey, tag);
+      let {ctor,customElement} = getConstructor(tag);
+      if(!customElement){
+        new ctor();
+      }
+  }
+  inputs(values){
+    //sino values set
+    //else construir objeto a partir de los elementos 
+    //del array pasada and set properties
+  }
+  output(outputName,handler,scope){
+
+  }
+  closeElement(){
+
+  }
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
     let { action, state, node } = this.currentNode;

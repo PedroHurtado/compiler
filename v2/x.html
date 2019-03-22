@@ -3,6 +3,7 @@ if(value){
 }else{
     <div>t`Hola1`</div>
 }
+<x-foo class="hello" out:pepito="{fn}"></x-foo>
 <ul>
     items.forEach(car=>{
         let {name} = car;
@@ -34,21 +35,28 @@ if(value){
     class App extends HTMLElement {
         constructor() {
             super();
-            this.set({
+            this.target = this.attachShadow({ mode: 'open' });
+        }
+        click(name) {
+            let value = !this.value;
+            this.set({ value });
+        }
+        static get outputs() {
+            return ['pepito'];
+        }
+        static get inputs() {
+            return {
                 value: true,
                 text: 'Almo',
                 active: 1,
                 items: [
                     { name: 'Pedro' }, { name: 'Hurtado' }
                 ]
-            });
-        }
-        click(name) {
-            let value = !this.value;
-            this.set({value});
+            };
         }
         static get tag() {
-            return 'x-foo'
+            return 'x-foo';
         }
+
     }
 </script>
