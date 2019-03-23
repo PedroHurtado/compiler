@@ -1,11 +1,11 @@
 import {set} from './changes.js';
 const noop = function(){};
+const getAttribute =(value)=>`_${value}`
 function decorateOutputs(ctor) {
     let outputs = ctor.outputs;
     if (Array.isArray(outputs)) {
-        let attribute = 
         outputs.forEach(output => {
-            let attribute = `_${output}`
+            let attribute =getAttribute(output);
             Object.defineProperty(ctor.prototype, output, {
                 get: function () {
                     return this[attribute] || noop;
@@ -21,7 +21,7 @@ function decorateInputs(ctor){
     let inputs = ctor.inputs;
     if(inputs && typeof inputs === 'object'){
         Object.keys(inputs).forEach(input=>{
-            let attribute = `_${input}`
+            let attribute = getAttribute(input);
             Object.defineProperty(ctor.prototype,input,{
                 get:function(){
                     return this[attribute];

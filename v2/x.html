@@ -34,11 +34,10 @@ if(value){
     class App extends HTMLElement {
         constructor() {
             super();
-            this.target = this.attachShadow({ mode: 'open' });
+            this.set(null);
         }
         click(name) {
-            let value = !this.value;
-            this.set({ value });
+            this.set({ value:!this.value });
         }
         static get outputs() {
             return ['pepito'];

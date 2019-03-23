@@ -38,9 +38,7 @@ function isScopeIdentifier(globlaScope, name, key) {
         key != 'property'
     );
 }
-function isPrincipalIf({ key }) {
-    return key !== 'consequent' && key !== 'alternate';
-}
+
 
 const visitorBlock = {
     BlockStatement: {
