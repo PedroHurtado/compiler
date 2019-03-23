@@ -151,7 +151,7 @@ export class VDom {
     //del array pasada and set properties
   }
   output(outputName,handler,scope){
-
+     handler.scope = scope;
   }
   closeElement(){
 

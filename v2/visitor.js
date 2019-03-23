@@ -2,6 +2,7 @@ const t = require('@babel/types');
 const { createMeta, getMeta, getNodeMeta, getFunctionName } = require('./helper/meta');
 const visitorEvents = require('./helper/events/visitorevents');
 const appendEvent=require('./helper/events/transformevents');
+const output = require('./helper/transforoutput');
 const {
     transformAppend,
     transformText,
@@ -25,7 +26,8 @@ const {
     APPENDEVENT,
     APPENDTEXT,
     ANCHOR,
-    FOREACH
+    FOREACH,
+    OUTPUT,
 } = require('./helper/reservedwords');
 
 function isScopeIdentifier(globlaScope, name, key) {
@@ -103,10 +105,15 @@ const visitor = {
                     path.insertAfter(generateUpdateVar(subKey));
                 }
                 path.skip();
-            } else if (name === 'appendEvent') {
+            } else if (name === APPENDEVENT) {
                 let scope = { node: node, keys: new Set() };
                 path.traverse(visitorEvents, scope);
                 let {_arguments,statements} = appendEvent(path,args,scope.keys);
+                this.events.push(...statements);
+                node.arguments = _arguments;
+                path.skip();
+            }else if(name=== OUTPUT){
+                let {_arguments,statements} = output(path,args);
                 this.events.push(...statements);
                 node.arguments = _arguments;
                 path.skip();

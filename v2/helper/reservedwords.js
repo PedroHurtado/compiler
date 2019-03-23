@@ -8,6 +8,7 @@ const PROPERTIES='properties';
 const ANCHOR = 'anchor';
 const VDOM = 'vdom';
 const VDOMINSTANCE='VDom';
+const OUTPUT = 'output';
 const FOREACH = 'forEach'
 
 module.exports={
@@ -21,6 +22,7 @@ module.exports={
     VDOM,
     FOREACH,
     VDOMINSTANCE,
-    PROPERTIES
+    PROPERTIES,
+    OUTPUT
 }
 

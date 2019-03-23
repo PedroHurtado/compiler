@@ -7,7 +7,7 @@ const reserved = {
     return `['${name}',${value}]`
   },
   out: (name, value) => {
-    return `vdom.output('${value}',${name},$);`
+    return `vdom.output('${value}',${name},{$});`
   },
   default: (value, name, isWebComponents) => {
     return `vdom.appendAttribute('${name}',${value});`

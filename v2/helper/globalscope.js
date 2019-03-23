@@ -9,7 +9,8 @@ const {
     FOREACH,
     VDOM,
     VDOMINSTANCE,
-    PROPERTIES
+    PROPERTIES,
+    OUTPUT
   } = require("./reservedwords");
   
   const globalScope = [
@@ -24,6 +25,7 @@ const {
     VDOM,
     VDOMINSTANCE,
     PROPERTIES,
+    OUTPUT,
     ...Object.getOwnPropertyNames(Array),
     ...Object.getOwnPropertyNames(Array.prototype),
     ...Object.getOwnPropertyNames(Object.prototype),
