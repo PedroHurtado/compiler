@@ -2,6 +2,7 @@ const visitor = require('./visitor');
 const Block = require('./helper/block')
 const globalScope = require('./helper/globalscope');
 const { generateGlobalVar } = require('./helper/generators').visitor;
+const transformCreateVDom =require('./helper/transformcreatevdom');
 const t = require('@babel/types');
 
 const visitorRender = {
@@ -21,6 +22,7 @@ const visitorRender = {
             if (scope.events.length) {
                 body.unshift(...scope.events);
             }
+            body.unshift(...transformCreateVDom());
             if (scope.variables.length) {
                 body.unshift(generateGlobalVar(scope.variables));
             }

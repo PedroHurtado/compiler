@@ -75,10 +75,7 @@ if (script.length > 0) {
     }
 }
 
-let openFunction = `function render ($){ 
-    var first = $.first;
-    var target = $.target || $;
-    var vdom = new VDom(first,target);`;
+let openFunction = `function render ($){`;
 position += buffer.write(openFunction, position);
 
 (function write(nodes, currentElement) {
@@ -135,9 +132,6 @@ position += buffer.write(openFunction, position);
 
 let end = ' vdom.close(); vdom=null}'
 position += buffer.write(end, position)
-
-
-//position += buffer.write(`export {render};`,position);
 
 let newBuffer = Buffer.alloc(position);
 buffer.copy(newBuffer, 0, 0, position);
