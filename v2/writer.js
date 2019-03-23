@@ -1,5 +1,5 @@
 
-const MAXLENGTH = (parseInt(Math.pow(2, 15)) + 10);
+const MAXLENGTH = Math.pow(2, 15);  //max 32kb in template
 class Writer{
     constructor(){
         this.position = 0;

@@ -148,7 +148,7 @@ export class VDom {
   }
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
-    let { action, state, node } = this.currentNode;
+    let { action,node } = this.currentNode;
     let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
       if (sealed === 0) {
