@@ -78,7 +78,7 @@ if (script.length > 0) {
 let openFunction = `function render ($){`;
 position += buffer.write(openFunction, position);
 
-(function write(nodes, currentElement) {
+(function write(nodes) {
     nodes.forEach(element => {
         let { tagName, value, attrs, childNodes } = element;
         if (tagName) {
@@ -128,7 +128,7 @@ position += buffer.write(openFunction, position);
         }
 
     });
-}(nodes, 'target'));
+}(nodes));
 
 let end = ' vdom.close(); vdom=null}'
 position += buffer.write(end, position)
