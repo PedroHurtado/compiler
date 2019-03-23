@@ -6,10 +6,18 @@ class Writer{
         this.buffer = Buffer.alloc(MAXLENGTH);
     }
     write(code){
-        this.position+=this.buffer.write(code,this.position);
+        if(code){
+            this.position+=this.buffer.write(code,this.position);
+        }
     }
     get code(){
-        return this.buffer.toString("utf-8",0,this.position)
+        let code = this.buffer.toString("utf-8",0,this.position);
+        this.dispose();
+        return code;
+    }
+    dispose(){
+        this.position =0;
+        this.buffer =null;
     }
 }
 
