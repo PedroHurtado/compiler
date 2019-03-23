@@ -18,15 +18,6 @@ export class VDom {
     this.inizialice();
   }
   inizialice() {
-    this.default = {
-      tag: null,
-      action: "c",
-      state: null,
-      parent: null,
-      parentKey: null,
-      children: null,
-      index: 0
-    };
     
     this.currentParent =this.getDefault({ action: "", key:"0.0.0.target" })
     this.last = new Map();
@@ -65,7 +56,7 @@ export class VDom {
     return Array.isArray(parent) ? parent.join(".") : parent;
   }
   getDefault(init) {
-    let defaultNode = Object.assign({}, this.default, init);
+    let defaultNode = Object.assign({}, VDom.default(), init);
     defaultNode.children = [];
     Object.defineProperty(defaultNode, "next", {
       get: function() {
@@ -104,7 +95,6 @@ export class VDom {
       this.currentNode.node.__key = key;
       this.addDom(key, this.currentNode);
     }
-   
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
     this.currentParent = this.currentNode;
     this.parents.push(this.currentParent);
@@ -116,12 +106,11 @@ export class VDom {
     let parent = this.currentParent;
     this.currentNode = this.createCurrentNode(key, "text", parent);
     let { action, node } = this.currentNode;
-
+    let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
       this.currentNode.node = createText(value);
       this.currentNode.node.__key = key;
       if (sealed === 0) {
-        let state = (this.currentNode.state = this.currentNode.state || {});
         state.text = {
           value: value
         };
@@ -129,13 +118,11 @@ export class VDom {
       }
       this.addDom(key, this.currentNode);
     } else if (sealed === 0) {
-      let state = (this.currentNode.state = this.currentNode.state || {});
       if (state.text.value !== value) {
         state.text.value = value;
         updateText(node, value);
       }
     }
-    
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
 
   }
@@ -161,10 +148,9 @@ export class VDom {
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
     let { action, state, node } = this.currentNode;
-
+    let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
       if (sealed === 0) {
-        let state = (this.currentNode.state = this.currentNode.state || {});
         state[attr] = {
           value: value
         };
@@ -172,7 +158,6 @@ export class VDom {
       }
       setAttribute(node, attr, value);
     } else if (sealed === 0) {
-      let state = (this.currentNode.state = this.currentNode.state || {});
       let old = state[attr];
       if (old.value != value) {
         old.value = value;
@@ -240,10 +225,19 @@ export class VDom {
     this.removeNodes();
     this.createNodes();
     this.last = null;
-    this.current = null;
-    this.default = null;
     this.currentNode = null;
     this.created = null;
     this.target = null;
+  }
+  static default(){
+    return {
+      tag: null,
+      action: "c",
+      state: null,
+      parent: null,
+      parentKey: null,
+      children: null,
+      index: 0
+    };
   }
 }
