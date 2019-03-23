@@ -4,12 +4,15 @@ const path = require('path');
 const interpolate = require('./interpolate');
 const attributes = require('./attributes');
 const parseCode = require('./parse');
+const Writer = require('./writer');
+
+let writer = new Writer();
 
 
 let filename = './v2/x.html';
 let exportName = path.parse(filename).name;
 let str = fs.readFileSync(filename, 'utf-8');
-let result = parse5.parse(str, { sourceCodeLocationInfo: true });
+let result = parse5.parse(str);
 let childNodes = result.childNodes[0].childNodes[1].childNodes
 let nodes = childNodes.filter(
     node => {
@@ -63,52 +66,47 @@ function isWebComponent(node) {
         node.attrs.filter(attr => attr.name === 'is').length > 0;
 }
 
-let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
-let position = 0;
+
 let imports = `import { VDom, define, decorate, getEventScope } from './dom/index.js'`;
-position += buffer.write(imports, position)
+writer.write(imports);
 if (script.length > 0) {
     let [chilNode] = script[0].childNodes;
     let value = chilNode.value;
     if (value) {
-        position += buffer.write(value, position);
+        writer.write(value);
     }
 }
+writer.write(`function render ($){`);
 
-let openFunction = `function render ($){`;
-position += buffer.write(openFunction, position);
 
-(function write(nodes) {
+(function visit(nodes) {
     nodes.forEach(element => {
         let { tagName, value, attrs, childNodes } = element;
         if (tagName) {
             let item = createItem(tagName);
             if (isWebComponent(element)) {
-                let appenNode = `vdom.appendComponent('${item}','${tagName}');`;
-                position += buffer.write(appenNode, position);
+                writer.write(`vdom.appendComponent('${item}','${tagName}');`)
                 let {processed,properties} = attributes(attrs,true);
                 processed.forEach((attribute) => {
-                    position += buffer.write(attribute, position);
+                    writer.write(attribute);
                 });
                 if(properties){
-                    position+=buffer.write(`vdom.inputs(${properties});`,position);
+                    writer.write(`vdom.inputs(${properties});`);
                 }else{
-                    position+=buffer.write(`vdom.inputs(null);`,position);
+                    writer.write(`vdom.inputs(null);`);
                 }
-
             }
             else {
-                let appenNode = `vdom.append('${item}','${tagName}');`;
-                position += buffer.write(appenNode, position);
+                writer.write(`vdom.append('${item}','${tagName}');`)
                 let {processed} = attributes(attrs);
                 processed.forEach((attribute) => {
-                    position += buffer.write(attribute, position);
+                    writer.write(attribute);
                 });
             }
             if (element.childNodes && element.childNodes.length > 0) {
-                write(element.childNodes, item);
+                visit(element.childNodes, item);
             }
-            position += buffer.write('vdom.closeElement();', position);
+            writer.write('vdom.closeElement();');
         }
         else if (value) {
             let str = isTextContent(value);
@@ -116,26 +114,21 @@ position += buffer.write(openFunction, position);
                 let item = createItem('text'), values, params;
                 values = interpolate(str);
                 params = values.map(c => c.expression ? c.text : `'${c.text}'`).join(', ')
-
-                let callExpression = `vdom.appendText('${item}', ${params});`;
-
-                position += buffer.write(callExpression, position);
+                writer.write(`vdom.appendText('${item}', ${params});`);
             }
             else {
-                str = value;
-                position += buffer.write(str, position)
+                writer.write(value);
             }
         }
 
     });
 }(nodes));
 
-let end = ' vdom.close(); vdom=null}'
-position += buffer.write(end, position)
+writer.write('vdom.close();vdom=null;}')
 
-let newBuffer = Buffer.alloc(position);
-buffer.copy(newBuffer, 0, 0, position);
-let code = parseCode(newBuffer.toString('utf8'));
+
+
+let code = parseCode(writer.code);
 {
 
     let newFilename = path.format({
