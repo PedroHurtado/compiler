@@ -11,6 +11,7 @@ import {
   removeEvent
 } from "./domfunctions.js";
 
+const TARGETKEY = "0.0.0.target"
 export class VDom {
   constructor(first, target) {
     this.first = first;
@@ -19,9 +20,9 @@ export class VDom {
   }
   inizialice() {
     
-    this.currentParent =this.getDefault({ action: "", key:"0.0.0.target" })
+    this.currentParent =this.getDefault({ action: "", key:TARGETKEY })
     this.last = new Map();
-    this.last.set("0.0.0.target", this.currentParent);
+    this.last.set(TARGETKEY, this.currentParent);
     this.created = new Map();
     this.currentNode = null;
     this.parents = [this.currentParent];
