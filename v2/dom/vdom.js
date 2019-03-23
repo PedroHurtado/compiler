@@ -172,6 +172,7 @@ export class VDom {
       events[event] = { handler, scope };
       createEvent(node, event, handler);
     } else {
+      events[event].scope = null;
       events[event].scope = scope;
     }
   }

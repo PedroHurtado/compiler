@@ -10,7 +10,7 @@ function appendEvent(path, args, keys) {
     
     let contextTemplate = `
             function HANDLER(event){
-                let OBJECTPATTERN = event.currentTarget.__events[EVENT].scope;
+                let OBJECTPATTERN = getEventScope(event,EVENT);
                 EXPRESSION;
         }
     `;

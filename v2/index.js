@@ -65,8 +65,8 @@ function isWebComponent(node) {
 
 let buffer = Buffer.alloc(parseInt(Math.pow(2, 15)) + 10);
 let position = 0;
-
-position += buffer.write(`import { VDom, define, decorate } from './dom/index.js'`, position)
+let imports = `import { VDom, define, decorate, getEventScope } from './dom/index.js'`;
+position += buffer.write(imports, position)
 if (script.length > 0) {
     let [chilNode] = script[0].childNodes;
     let value = chilNode.value;
