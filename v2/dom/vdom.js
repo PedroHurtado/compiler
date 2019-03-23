@@ -211,7 +211,7 @@ export class VDom {
   }
   removeNodes() {
     let domParents = [];
-    this.last.delete("0.0.0.target");
+    this.last.delete(TARGETKEY);
     for (let [key, value] of this.last) {
       let { node, parentKey } = value;
       this.removeEvents(node);
@@ -230,6 +230,8 @@ export class VDom {
     this.currentNode = null;
     this.created = null;
     this.target = null;
+    this.currentParent = null;
+    this.parents = null;
   }
   static default(){
     return {
