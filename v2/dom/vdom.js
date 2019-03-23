@@ -27,11 +27,13 @@ export class VDom {
       children: null,
       index: 0
     };
-    this.current = new Map();
-    this.current.set("0.0.0.target", this.getDefault({ action: "" }));
-    this.last = new Map(this.current);
+    
+    this.currentParent =this.getDefault({ action: "", key:"0.0.0.target" })
+    this.last = new Map();
+    this.last.set("0.0.0.target", this.currentParent);
     this.created = new Map();
     this.currentNode = null;
+    this.parents = [this.currentParent];
     if (!this.first) {
       this.hidrate(this.target);
     }
@@ -76,45 +78,43 @@ export class VDom {
     });
     return defaultNode;
   }
-  createCurrentNode(key, tag, parent, parentKey) {
+  createCurrentNode(key, tag, parent) {
     if (this.first) {
-      return this.getDefault({ tag, parent, parentKey });
+      return this.getDefault({ tag, parent, parentKey:parent.key });
     } else {
       let current = this.last.get(key);
       if (current) {
         this.last.delete(key);
         return current;
       }
-      return this.getDefault({ tag, parent, parentKey });
+      return this.getDefault({ tag, parent, parentKey:parent.key });
     }
   }
   addDom(key, currentNode) {
     this.created.set(key, currentNode);
   }
-  getParent(parent) {
-    return this.current.get(parent);
-  }
-  append(block, key, subkey, tagKey, parentKey, tag) {
+ 
+  append(block, key, subkey, tagKey,tag) {
     key = this.generateKey(block, key, subkey, tagKey);
-    parentKey = this.generateParentKey(parentKey);
-    let parent = this.getParent(parentKey);
-    this.currentNode = this.createCurrentNode(key, tag, parent, parentKey);
+    let parent = this.currentParent;
+    this.currentNode = this.createCurrentNode(key, tag, parent);
     let { action } = this.currentNode;
     if (action === "c") {
       this.currentNode.node = create(tag);
       this.currentNode.node.__key = key;
       this.addDom(key, this.currentNode);
     }
-    this.current.set(key, this.currentNode);
+   
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
+    this.currentParent = this.currentNode;
+    this.parents.push(this.currentParent);
   }
 
-  appendText(block, key, subkey, tagKey, parentKey, sealed, ...values) {
+  appendText(block, key, subkey, tagKey, sealed, ...values) {
     key = this.generateKey(block, key, subkey, tagKey);
-    parentKey = this.generateParentKey(parentKey);
     let value = values.join("");
-    let parent = this.getParent(parentKey);
-    this.currentNode = this.createCurrentNode(key, "text", parent, parentKey);
+    let parent = this.currentParent;
+    this.currentNode = this.createCurrentNode(key, "text", parent);
     let { action, node } = this.currentNode;
 
     if (action === "c") {
@@ -135,11 +135,12 @@ export class VDom {
         updateText(node, value);
       }
     }
-    this.current.set(key, this.currentNode);
+    
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
+
   }
-  appendComponent(block, key, subkey, tagKey, parentKey, tag){
-      this.append(block, key, subkey, tagKey, parentKey, tag);
+  appendComponent(block, key, subkey, tagKey, tag){
+      this.append(block, key, subkey, tagKey, tag);
       let {ctor,customElement} = getConstructor(tag);
       if(!customElement){
         new ctor();
@@ -154,7 +155,8 @@ export class VDom {
      handler.scope = scope;
   }
   closeElement(){
-
+    this.parents.pop();
+    this.currentParent = this.parents[this.parents.length-1];
   }
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");

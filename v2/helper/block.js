@@ -1,9 +1,8 @@
-const {GENERATENUMERIC,GENERATESTRING,ZERO} = require('./constans');
+const {GENERATENUMERIC,ZERO} = require('./constans');
 
 class Block {
     constructor() {
         this._each = null;
-        this._parent=null;
         this._index = 0;
         this._key = null;
         this._subKey = null;
@@ -13,14 +12,6 @@ class Block {
         current._key = GENERATENUMERIC(this._index);
         this._index++;
         return current;
-    }
-    set parent(value) {
-        if (!this._parent && value) {
-            this._parent = value;
-        }
-    }
-    get parent() {
-        return GENERATESTRING(this._parent);
     }
     set subKey(value){
         this._subKey = value;

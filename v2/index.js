@@ -87,7 +87,7 @@ position += buffer.write(openFunction, position);
         if (tagName) {
             let item = createItem(tagName);
             if (isWebComponent(element)) {
-                let appenNode = `vdom.appendComponent('${currentElement}','${item}','${tagName}');`;
+                let appenNode = `vdom.appendComponent('${item}','${tagName}');`;
                 position += buffer.write(appenNode, position);
                 let {processed,properties} = attributes(attrs,true);
                 processed.forEach((attribute) => {
@@ -101,7 +101,7 @@ position += buffer.write(openFunction, position);
 
             }
             else {
-                let appenNode = `vdom.append('${currentElement}','${item}','${tagName}');`;
+                let appenNode = `vdom.append('${item}','${tagName}');`;
                 position += buffer.write(appenNode, position);
                 let {processed} = attributes(attrs);
                 processed.forEach((attribute) => {
@@ -120,7 +120,7 @@ position += buffer.write(openFunction, position);
                 values = interpolate(str);
                 params = values.map(c => c.expression ? c.text : `'${c.text}'`).join(', ')
 
-                let callExpression = `vdom.appendText('${currentElement}','${item}', ${params});`;
+                let callExpression = `vdom.appendText('${item}', ${params});`;
 
                 position += buffer.write(callExpression, position);
             }
