@@ -178,7 +178,7 @@ export class VDom {
     }
   }
   createNodes(target) {
-    let domParents = [];
+    let rootNodes = [];
 
     for (let [key, value] of this.created) {
       let { node, parentKey, children } = value;
@@ -187,10 +187,10 @@ export class VDom {
         child = null;
       });
       if (!this.created.get(parentKey)) {
-        domParents.push(value);
+        rootNodes.push(value);
       }
     }
-    domParents.forEach(item => {
+    rootNodes.forEach(item => {
       let { node, parent } = item;
       if (parent.node) {
         append(parent.node, node, item.next);
@@ -210,16 +210,16 @@ export class VDom {
     }
   }
   removeNodes() {
-    let domParents = [];
+    let rootNodes = [];
     this.last.delete(TARGETKEY);
     for (let [key, value] of this.last) {
       let { node, parentKey } = value;
       this.removeEvents(node);
       if (!this.last.get(parentKey)) {
-        domParents.push(node);
+        rootNodes.push(node);
       }
     }
-    domParents.forEach(node => {
+    rootNodes.forEach(node => {
       remove(node);
     });
   }

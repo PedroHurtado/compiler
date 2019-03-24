@@ -8,7 +8,7 @@ const generateCode = function (ast) {
   let newCode = generate(ast).code;
   return newCode;
 }
-const parseCode = function (code) {
+const transformJs = function (code) {
   
   let ast = parser(code,{
     sourceType:'module'
@@ -16,4 +16,4 @@ const parseCode = function (code) {
   traverse(ast, visitorRender);
   return generateCode(ast);
 }
-module.exports = parseCode;
+module.exports = transformJs;
