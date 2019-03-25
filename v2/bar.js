@@ -7,7 +7,7 @@ class Bar extends HTMLElement {
 
   static get inputs() {
     return {
-      name: "pedro"
+      description: "pedro"
     };
   }
 
@@ -21,7 +21,7 @@ function render($) {
       target = $.target || $,
       vdom = new VDom(first, target);
   vdom.append(0, 0, 0, 'div', 'div');
-  vdom.appendText(0, 0, 0, 'text', 0, $.name);
+  vdom.appendText(0, 0, 0, 'text', 0, $.description);
   vdom.closeElement();
   vdom.close();
   vdom = null;
