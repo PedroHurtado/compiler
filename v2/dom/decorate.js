@@ -14,6 +14,7 @@ function decorateOutputs(ctor) {
                     this[attribute] = value;
                 }
             })
+            ctor.prototype[attribute] = noop;
         })
     }
 }
