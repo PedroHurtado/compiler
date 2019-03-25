@@ -77,7 +77,7 @@ const visitor = function (writer, nodes) {
                         writer.write(attribute);
                     });
                     if (properties) {
-                        writer.write(`vdom.inputs(${properties});`);
+                        writer.write(`vdom.inputs([${properties}]);`);
                     } else {
                         writer.write(`vdom.inputs();`);
                     }

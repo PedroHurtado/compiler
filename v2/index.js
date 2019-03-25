@@ -3,12 +3,13 @@ const path = require("path");
 const transformHtml = require("./transforhtml");
 const transformJs = require("./transformjs");
 
-let filename = "./v2/x.html";
-let exportName = path.parse(filename).name;
+let filename = process.argv[2];
+let {name,dir} = path.parse(filename);
 let html = fs.readFileSync(filename, "utf-8");
 
 let newFilename = path.format({
-  name: `./v2/${exportName}`,
+  dir:dir,
+  name: name,
   ext: ".js"
 });
 

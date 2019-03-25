@@ -27,7 +27,7 @@ module.exports = function attributes(attrs, isWebComponents = false) {
     let value = interpolate(attr.value);
     if (isReserved(name)) {
       if (name[0] === 'in') {
-        properties.push(reserved[name[0]](value[0].text, name[1]));
+        properties.push(reserved[name[0]](name[1],getParameters(value)));
       } else {
         processed.push(reserved[name[0]](value[0].text, name[1]));
       }

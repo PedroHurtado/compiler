@@ -11,7 +11,8 @@ import {
   removeEvent
 } from "./domfunctions.js";
 
-const TARGETKEY = "0.0.0.target"
+
+const TARGETKEY = 0;
 export class VDom {
   constructor(first, target) {
     this.first = first;
@@ -19,22 +20,25 @@ export class VDom {
     this.inizialice();
   }
   inizialice() {
-    
-    this.currentParent =this.getDefault({ action: "", key:TARGETKEY })
+
+    this.currentParent = this.getDefault({ action: "", key: TARGETKEY })
     this.last = new Map();
     this.last.set(TARGETKEY, this.currentParent);
     this.created = new Map();
     this.currentNode = null;
     this.parents = [this.currentParent];
     if (!this.first) {
-      this.hidrate(this.target);
+      this.hidrate(this.target,this.target.__instanceKey);
+    }
+    else{
+      this.target.__instanceKey = Date.now();
     }
   }
-  hidrate(target) {
+  hidrate(target,instanceKey) {
     let parentKey = target.__key;
     for (let value of target.childNodes) {
-      let { __key, __state } = value;
-      if (value.__key) {
+      let { __key, __state ,childNodes } = value;
+      if (value.__key && value.__instanceParentKey === instanceKey) {
         this.last.set(
           __key,
           this.getDefault({
@@ -44,8 +48,8 @@ export class VDom {
             parentKey: parentKey
           })
         );
-        if (value.childNodes) {
-          this.hidrate(value);
+        if (childNodes) {
+          this.hidrate(value,instanceKey);
         }
       }
     }
@@ -60,7 +64,7 @@ export class VDom {
     let defaultNode = Object.assign({}, VDom.default(), init);
     defaultNode.children = [];
     Object.defineProperty(defaultNode, "next", {
-      get: function() {
+      get: function () {
         let sibiling = this.parent.children[this.index + 1];
         if (sibiling && sibiling.node.parentNode) {
           return sibiling.node;
@@ -72,21 +76,21 @@ export class VDom {
   }
   createCurrentNode(key, tag, parent) {
     if (this.first) {
-      return this.getDefault({ tag, parent, parentKey:parent.key });
+      return this.getDefault({ key:key, tag, parent, parentKey: parent.key });
     } else {
       let current = this.last.get(key);
       if (current) {
         this.last.delete(key);
         return current;
       }
-      return this.getDefault({ tag, parent, parentKey:parent.key });
+      return this.getDefault({ key:key,tag, parent, parentKey: parent.key });
     }
   }
   addDom(key, currentNode) {
     this.created.set(key, currentNode);
   }
- 
-  append(block, key, subkey, tagKey,tag) {
+
+  append(block, key, subkey, tagKey, tag) {
     key = this.generateKey(block, key, subkey, tagKey);
     let parent = this.currentParent;
     this.currentNode = this.createCurrentNode(key, tag, parent);
@@ -94,6 +98,7 @@ export class VDom {
     if (action === "c") {
       this.currentNode.node = create(tag);
       this.currentNode.node.__key = key;
+      this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
       this.addDom(key, this.currentNode);
     }
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
@@ -111,13 +116,15 @@ export class VDom {
     if (action === "c") {
       this.currentNode.node = createText(value);
       this.currentNode.node.__key = key;
+      this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
+      this.addDom(key, this.currentNode);
       if (sealed === 0) {
         state.text = {
           value: value
         };
         this.currentNode.node.__state = state;
       }
-      this.addDom(key, this.currentNode);
+      
     } else if (sealed === 0) {
       if (state.text.value !== value) {
         state.text.value = value;
@@ -127,28 +134,48 @@ export class VDom {
     this.currentNode.index = parent.children.push(this.currentNode) - 1;
 
   }
-  appendComponent(block, key, subkey, tagKey, tag){
-      this.append(block, key, subkey, tagKey, tag);
-      let {ctor,customElement} = getConstructor(tag);
-      if(!customElement){
-        new ctor();
-      }
+  appendComponent(block, key, subkey, tagKey, tag) {
+    this.append(block, key, subkey, tagKey, tag);
+    let { ctor, customElement } = getConstructor(tag);
+    if (!customElement) {
+      this.currentNode.instance = new ctor();
+    }
+    else {
+      this.currentNode.instance = this.currentNode.node;
+    }
   }
-  inputs(values){
-    //sino values set
-    //else construir objeto a partir de los elementos 
-    //del array pasada and set properties
+  inputs(values) {
+    let input = {};
+    if (values) {
+      input = values.map(value => {
+        let obj = {};
+        if (value.length > 2) {
+          obj[value[0]] = value.slice(1).join('');
+        } else {
+          obj[value[0]] = value[1];
+        }
+        return obj;
+      }).reduce((a, b) => {
+        return Object.assign(a, b);
+      }, {});
+    }
+    let { instance } = this.currentNode;
+    if (instance && 'set' in instance) {
+      instance.set(input);
+    }
   }
-  output(outputName,handler,scope){
-     handler.scope = scope;
+  output(outputName, handler, scope) {
+    let { instance } = this.currentNode;
+    instance[outputName] = handler;
+    handler.scope = scope;
   }
-  closeElement(){
+  closeElement() {
     this.parents.pop();
-    this.currentParent = this.parents[this.parents.length-1];
+    this.currentParent = this.parents[this.parents.length - 1];
   }
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
-    let { action,node } = this.currentNode;
+    let { action, node } = this.currentNode;
     let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
       if (sealed === 0) {
@@ -233,7 +260,7 @@ export class VDom {
     this.currentParent = null;
     this.parents = null;
   }
-  static default(){
+  static default() {
     return {
       tag: null,
       action: "c",
