@@ -1,6 +1,6 @@
 import { create, append } from './domfunctions.js';
 import { getConstructor } from './customelements.js';
-export function bootStrap(parent,data = {},anchor=null) {
+export function bootstrap(parent,data = {},anchor=null) {
     let { tag } = this;
     let { customElement } = getConstructor(tag);
     let instance = new this();

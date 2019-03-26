@@ -1,5 +1,5 @@
 import {set} from './changes.js';
-import {bootStrap} from './bootstrap.js';
+import {bootstrap} from './bootstrap.js';
 const noop = function(){};
 const getAttribute =(value)=>`_${value}`
 function decorateOutputs(ctor) {
@@ -52,5 +52,5 @@ export function decorate(ctor, render) {
     decorateInputs(ctor);
     decorateElementRef(ctor);
     decorateRef(ctor);
-    ctor.bootStrap = bootStrap;
+    ctor.bootstrap = bootstrap;
 }
