@@ -17,6 +17,9 @@ export function setAttribute(node,attr,value) {
         node.setAttribute(attr, value)
     }
 }
+export function style(node,property,value){
+    node.style.setProperty(property,value);
+}
 export function remove(node){
     node.parentNode.removeChild(node);
 }

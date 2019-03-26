@@ -5,6 +5,7 @@ const APPENDATTRIBUTE ='appendAttribute';
 const APPENDEVENT = 'appendEvent';
 const APPPENDCOMPONENT='appendComponent';
 const PROPERTIES='properties';
+const STYLE='style';
 const ANCHOR = 'anchor';
 const VDOM = 'vdom';
 const VDOMINSTANCE='VDom';
@@ -18,6 +19,7 @@ module.exports={
     APPENDATTRIBUTE,
     APPPENDCOMPONENT,
     APPENDEVENT,
+    STYLE,
     ANCHOR,
     VDOM,
     FOREACH,

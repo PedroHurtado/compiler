@@ -25,6 +25,7 @@ const {
     APPENDATTRIBUTE,
     APPENDEVENT,
     APPENDTEXT,
+    STYLE,
     ANCHOR,
     FOREACH,
     OUTPUT,
@@ -93,7 +94,7 @@ const visitor = {
             } else if (name === APPENDTEXT) {
                 node.arguments = transformText(args, block);
                 path.skip();
-            } else if (name === APPENDATTRIBUTE) {
+            } else if (name === APPENDATTRIBUTE || name===STYLE) {
                 node.arguments = transformAttribute(args);
                 path.skip();
             } else if (name === FOREACH) {

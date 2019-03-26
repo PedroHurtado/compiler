@@ -7,6 +7,7 @@ import {
   createText,
   updateText,
   setAttribute,
+  style,
   remove,
   removeEvent
 } from "./domfunctions.js";
@@ -38,13 +39,14 @@ export class VDom {
   hidrate(target,instanceKey) {
     let parentKey = target.__key;
     for (let value of target.childNodes) {
-      let { __key, __state ,childNodes } = value;
+      let { __key, __state , __style,childNodes } = value;
       if (value.__key && value.__instanceParentKey === instanceKey) {
         this.last.set(
           __key,
           this.getDefault({
             node: value,
             state: __state,
+            style: __style,
             action: "",
             parentKey: parentKey
           })
@@ -197,6 +199,26 @@ export class VDom {
       if (old.value != value) {
         old.value = value;
         setAttribute(node, attr, value);
+      }
+    }
+  }
+  style(sealed, prop, ...values){
+    let value = values.join("");
+    let { action, node } = this.currentNode;
+    let state = (this.currentNode.style = this.currentNode.style || {});
+    if (action === "c") {
+      if (sealed === 0) {
+        state[prop] = {
+          value: value
+        };
+        node.__style = state;
+      }
+      style(node, prop, value);
+    } else if (sealed === 0) {
+      let old = state[prop];
+      if (old.value != value) {
+        old.value = value;
+        style(node, prop, value);
       }
     }
   }
