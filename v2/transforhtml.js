@@ -5,6 +5,7 @@ const attributes = require('./attributes');
 const parseCode = require('./transformjs');
 const Writer = require('./writer');
 
+const DEFAULTNAMESPACE = 'http://www.w3.org/1999/xhtml'
 
 function extractParts(ast) {
     let body = ast.childNodes[0].childNodes[1];
@@ -67,9 +68,10 @@ const visitor = function (writer, nodes) {
 
     (function visit(nodes) {
         nodes.forEach(element => {
-            let { tagName, value, attrs, childNodes } = element;
+            let { tagName, value, attrs, childNodes, namespaceURI } = element;
             if (tagName) {
                 let item = createItem(tagName);
+                
                 if (isWebComponent(element)) {
                     writer.write(`vdom.appendComponent('${item}','${tagName}');`)
                     let { processed, properties } = attributes(attrs, true);
@@ -83,7 +85,8 @@ const visitor = function (writer, nodes) {
                     }
                 }
                 else {
-                    writer.write(`vdom.append('${item}','${tagName}');`)
+                    let namespace = (namespaceURI === DEFAULTNAMESPACE) ? 0 : 1
+                    writer.write(`vdom.append('${item}','${tagName}',${namespace});`)
                     let { processed } = attributes(attrs);
                     processed.forEach((attribute) => {
                         writer.write(attribute);
@@ -136,6 +139,6 @@ module.exports = function transforHml(html) {
     openRenderFunction(writer);
     visitor(writer, nodes);
     closeRenderFunction(writer);
-    
+
     return writer.code;
 }

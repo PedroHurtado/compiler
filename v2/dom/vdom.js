@@ -60,9 +60,7 @@ export class VDom {
   generateKey(...key) {
     return key.join(".");
   }
-  generateParentKey(parent) {
-    return Array.isArray(parent) ? parent.join(".") : parent;
-  }
+ 
   getDefault(init) {
     let defaultNode = Object.assign({}, VDom.default(), init);
     defaultNode.children = [];
@@ -93,13 +91,13 @@ export class VDom {
     this.created.set(key, currentNode);
   }
 
-  append(block, key, subkey, tagKey, tag) {
+  append(block, key, subkey, tagKey, tag,namespace=0) {
     key = this.generateKey(block, key, subkey, tagKey);
     let parent = this.currentParent;
     this.currentNode = this.createCurrentNode(key, tag, parent);
     let { action } = this.currentNode;
     if (action === "c") {
-      this.currentNode.node = create(tag);
+      this.currentNode.node = create(tag,namespace);
       this.currentNode.node.__key = key;
       this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
       this.addDom(key, this.currentNode);
@@ -122,15 +120,13 @@ export class VDom {
       this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
       this.addDom(key, this.currentNode);
       if (sealed === 0) {
-        state.text = {
-          value: value
-        };
+        state['text'] = value;
         this.currentNode.node.__state = state;
       }
       
     } else if (sealed === 0) {
-      if (state.text.value !== value) {
-        state.text.value = value;
+      if (state['text'] !== value) {
+        state['text'] = value;
         updateText(node, value);
       }
     }
@@ -181,23 +177,20 @@ export class VDom {
     this.parents.pop();
     this.currentParent = this.parents[this.parents.length - 1];
   }
-
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
     let { action, node } = this.currentNode;
     let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
       if (sealed === 0) {
-        state[attr] = {
-          value: value
-        };
+        state[attr]=value;
         node.__state = state;
       }
       setAttribute(node, attr, value);
     } else if (sealed === 0) {
       let old = state[attr];
-      if (old.value != value) {
-        old.value = value;
+      if (old!=value) {
+        state[attr]= value;
         setAttribute(node, attr, value);
       }
     }
@@ -208,16 +201,14 @@ export class VDom {
     let state = (this.currentNode.style = this.currentNode.style || {});
     if (action === "c") {
       if (sealed === 0) {
-        state[prop] = {
-          value: value
-        };
+        state[prop] = value;
         node.__style = state;
       }
       style(node, prop, value);
     } else if (sealed === 0) {
       let old = state[prop];
-      if (old.value != value) {
-        old.value = value;
+      if (old != value) {
+        state[prop] = value;
         style(node, prop, value);
       }
     }
