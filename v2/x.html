@@ -33,10 +33,9 @@ if(value){
 </style>
 <script>
     import {} from './bar.js';
-    class App extends HTMLElement {
+    export default class App extends HTMLElement {
         constructor() {
             super();
-            this.set(null);
         }
         click(name) {
             this.set({ value:!this.value });

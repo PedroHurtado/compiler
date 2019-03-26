@@ -41,7 +41,7 @@ const visitor = function (writer, nodes) {
         if (value = tags.get(tag)) {
             let newtag = `${tag}${value}`
             let newValue = value + 1
-            tags.set(tags, newValue);
+            tags.set(tag, newValue);
             return newtag;
         }
         else {

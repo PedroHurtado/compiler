@@ -4,12 +4,16 @@ const NAMESPACES = {
 }
 
 export function create(tag, namespace) {
-    return document.createElementNS(
-        NAMESPACES[namespace],
-        tag
-    );
+    if (namespace === 0) {
+        return document.createElement(tag);
+    }
+    else {
+        return document.createElementNS(
+            NAMESPACES[namespace],
+            tag
+        );
+    }
 }
-
 export function append(parent, node, anchor) {
     parent.insertBefore(node, anchor);
 }
