@@ -10,7 +10,7 @@ const reserved = {
     return `vdom.output('${value}',${name},{$});`
   },
   ref: (name) => {
-    return `vdom.ref('${name}',$);`
+    return `vdom.ref('${name}');`
   },
   default: (value, name, isWebComponents) => {
     return `vdom.appendAttribute('${name}',${value});`

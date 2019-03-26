@@ -170,9 +170,9 @@ export class VDom {
     instance[outputName] = handler;
     handler.scope = scope;
   }
-  ref(name,instance){
+  ref(name){
     let {node} = this.currentNode;
-    instance.refs[name] = node;
+    this.instance.refs[name] = node;
     node.__ref = name;
   }
   closeElement() {
