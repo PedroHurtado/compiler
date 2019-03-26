@@ -14,9 +14,10 @@ import {
 
 const TARGETKEY = 0;
 export class VDom {
-  constructor(first, target) {
+  constructor(first, target,instance) {
     this.first = first;
     this.target = target;
+    this.instance = instance;
     this.inizialice();
   }
   inizialice() {
@@ -169,10 +170,16 @@ export class VDom {
     instance[outputName] = handler;
     handler.scope = scope;
   }
+  ref(name,instance){
+    let {node} = this.currentNode;
+    instance.refs[name] = node;
+    node.__ref = name;
+  }
   closeElement() {
     this.parents.pop();
     this.currentParent = this.parents[this.parents.length - 1];
   }
+
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
     let { action, node } = this.currentNode;
@@ -236,12 +243,19 @@ export class VDom {
       node.__events = null;
     }
   }
+  removeRef(node){
+    let {__ref} = node; 
+    if(__ref && this.instance.refs){
+      delete this.instance.refs[__ref];
+    }
+  }
   removeNodes() {
     let rootNodes = [];
     this.last.delete(TARGETKEY);
     for (let [key, value] of this.last) {
       let { node, parentKey } = value;
       this.removeEvents(node);
+      this.removeRef(node);
       if (!this.last.get(parentKey)) {
         rootNodes.push(node);
       }
@@ -259,6 +273,7 @@ export class VDom {
     this.target = null;
     this.currentParent = null;
     this.parents = null;
+    this.instance = null;
   }
   static default() {
     return {

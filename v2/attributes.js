@@ -9,6 +9,9 @@ const reserved = {
   out: (name, value) => {
     return `vdom.output('${value}',${name},{$});`
   },
+  ref: (name) => {
+    return `vdom.ref('${name}',$);`
+  },
   default: (value, name, isWebComponents) => {
     return `vdom.appendAttribute('${name}',${value});`
   }
@@ -27,7 +30,9 @@ module.exports = function attributes(attrs, isWebComponents = false) {
     let value = interpolate(attr.value);
     if (isReserved(name)) {
       if (name[0] === 'in') {
-        properties.push(reserved[name[0]](name[1],getParameters(value)));
+        properties.push(reserved[name[0]](name[1], getParameters(value)));
+      } else if (name[0] === 'ref') {
+        processed.push(reserved[name[0]](name[1]));
       } else {
         processed.push(reserved[name[0]](value[0].text, name[1]));
       }

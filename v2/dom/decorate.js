@@ -35,8 +35,20 @@ function decorateInputs(ctor){
         })
     }
 }
+function decorateElementRef(ctor){
+    Object.defineProperty(ctor.prototype,'elementRef',{
+        get:function(){
+            return this.__node || this;
+        }
+    });
+}
+function decorateRef(ctor){
+    ctor.prototype.refs = {};
+}
 export function decorate(ctor, render) {
     ctor.prototype.set = set(render);
     decorateOutputs(ctor);
     decorateInputs(ctor);
+    decorateElementRef(ctor);
+    decorateRef(ctor);
 }

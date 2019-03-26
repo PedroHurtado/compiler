@@ -7,7 +7,7 @@ module.exports = function transformCreateVDom() {
     let templateContent = `
             var first = $.first,
                 target = $.target || $,
-                vdom = new VDom(first, target);
+                vdom = new VDom(first, target, $);
             `
     let mapObject = {
         $: SCOPE
