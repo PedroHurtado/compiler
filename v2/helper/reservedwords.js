@@ -10,7 +10,8 @@ const ANCHOR = 'anchor';
 const VDOM = 'vdom';
 const VDOMINSTANCE='VDom';
 const OUTPUT = 'output';
-const FOREACH = 'forEach'
+const FOREACH = 'forEach';
+const HTML='html';
 
 module.exports={
     RENDER,
@@ -25,6 +26,7 @@ module.exports={
     FOREACH,
     VDOMINSTANCE,
     PROPERTIES,
-    OUTPUT
+    OUTPUT,
+    HTML
 }
 

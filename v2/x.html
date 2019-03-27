@@ -1,3 +1,4 @@
+
 if(value){
     <div ref:hello>t`Hola`</div>
 }else{
@@ -17,6 +18,7 @@ if(value){
         </li>
     });
 </ul>
+html`esto es una prueba {html}`
 <x-bar in:description="{text} está cuerdo"></x-bar>
 <style>
     .hello {
@@ -48,6 +50,7 @@ if(value){
                 color:'blue',
                 value: true,
                 text: 'Almo',
+                html:'<p>Hello</p>',
                 active: 1,
                 items: [
                     { name: 'Pedro' }, { name: 'Hurtado' }

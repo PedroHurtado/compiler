@@ -36,8 +36,20 @@ export function style(node, property, value) {
 export function remove(node) {
     node.parentNode.removeChild(node);
 }
+export function removeAdjacentHTML(node){
+    while(node.previousSibling){
+        let {__key} = node.previousSibling;
+        if(__key){
+            break;
+        }
+        remove(node.previousSibling);
+    }
+}
 export function appendClass(node, className) {
     node.className = className.trim();
+}
+export function insertAdjacentHTML(node,html){
+    let result = node.insertAdjacentHTML('beforebegin',html)
 }
 export function createEvent(node, event, handler) {
     node.addEventListener(event, handler)

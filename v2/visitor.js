@@ -29,6 +29,7 @@ const {
     ANCHOR,
     FOREACH,
     OUTPUT,
+    HTML
 } = require('./helper/reservedwords');
 
 function isScopeIdentifier(globlaScope, name, key) {
@@ -91,7 +92,7 @@ const visitor = {
             if (name === APPEND || name===APPPENDCOMPONENT) {
                 node.arguments = transformAppend(args, block);
                 path.skip();
-            } else if (name === APPENDTEXT) {
+            } else if (name === APPENDTEXT || name === HTML) {
                 node.arguments = transformText(args, block);
                 path.skip();
             } else if (name === APPENDATTRIBUTE || name===STYLE) {

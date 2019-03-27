@@ -61,6 +61,16 @@ const visitor = function (writer, nodes) {
         }
         return null;
     }
+    function isHtml(text) {
+        if (text) {
+            let start = text.indexOf('html`')
+            let end = text.indexOf('`', start + 5);
+            if (start !== -1 && end != -1) {
+                return text.substring(start + 5, end);
+            }
+        }
+        return null;
+    }
     function isWebComponent(node) {
         return node.tagName.indexOf("-") !== -1 ||
             node.attrs.filter(attr => attr.name === 'is').length > 0;
@@ -98,12 +108,17 @@ const visitor = function (writer, nodes) {
                 writer.write('vdom.closeElement();');
             }
             else if (value) {
-                let str = isTextContent(value);
-                if (str) {
+                let str;
+                if (str=isTextContent(value)) {
                     let item = createItem('text'), values, params;
                     values = interpolate(str);
                     params = values.map(c => c.expression ? c.text : `'${c.text}'`).join(', ')
                     writer.write(`vdom.appendText('${item}', ${params});`);
+                }else if(str=isHtml(value)){
+                    let item = createItem('noscript'), values, params;
+                    values = interpolate(str);
+                    params = values.map(c => c.expression ? c.text : `'${c.text}'`).join(', ')
+                    writer.write(`vdom.html('${item}',${params});`);
                 }
                 else {
                     writer.write(value);

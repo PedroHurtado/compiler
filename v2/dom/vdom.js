@@ -9,7 +9,9 @@ import {
   setAttribute,
   style,
   remove,
-  removeEvent
+  removeEvent,
+  insertAdjacentHTML,
+  removeAdjacentHTML,
 } from "./domfunctions.js";
 
 
@@ -213,6 +215,32 @@ export class VDom {
       }
     }
   }
+  html(block, key, subkey, tagKey, sealed, ...values){
+    key = this.generateKey(block, key, subkey, tagKey);
+    let value = values.join("");
+    let parent = this.currentParent;
+    this.currentNode = this.createCurrentNode(key, "noscript", parent);
+    let { action, node } = this.currentNode;
+    let state = (this.currentNode.state = this.currentNode.state || {});
+    if (action === "c") {
+      this.currentNode.node = create('noscript',0);
+      this.currentNode.node.__key = key;
+      this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
+      this.addDom(key, this.currentNode);
+      if (sealed === 0) {
+        state['html'] = value;
+        this.currentNode.node.__state = state;
+      }
+      
+    } else if (sealed === 0) {
+      if (state['html'] !== value) {
+        state['html'] = value;
+        removeAdjacentHTML(node);
+        insertAdjacentHTML(node,value);
+      }
+    }
+    this.currentNode.index = parent.children.push(this.currentNode) - 1;
+  }
   appendEvent(event, handler, scope) {
     let { node, action } = this.currentNode;
     let events = (node.__events = node.__events || {});
@@ -224,13 +252,19 @@ export class VDom {
       events[event].scope = scope;
     }
   }
+  checkAdjacentElement(child){
+    if(child.state && child.state.html){
+      insertAdjacentHTML(child.node,child.state.html);
+    }
+  }
   createNodes(target) {
     let rootNodes = [];
 
     for (let [key, value] of this.created) {
       let { node, parentKey, children } = value;
       children.forEach(child => {
-        append(node, child.node, child.next);
+        append(node,child.node,child.next);
+        this.checkAdjacentElement(child);
         child = null;
       });
       if (!this.created.get(parentKey)) {
@@ -244,6 +278,7 @@ export class VDom {
       } else {
         append(this.target, node, item.next);
       }
+      this.checkAdjacentElement(item);
     });
   }
   removeEvents(node) {
@@ -274,6 +309,10 @@ export class VDom {
       }
     }
     rootNodes.forEach(node => {
+      let {__state} = node;
+      if(__state && __state.html){
+        removeAdjacentHTML(node);
+      }
       remove(node);
     });
   }
