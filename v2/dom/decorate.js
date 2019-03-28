@@ -46,11 +46,22 @@ function decorateElementRef(ctor){
 function decorateRef(ctor){
     ctor.prototype.refs = {};
 }
+function connectedCallback(ctor){
+    ctor.prototype.first = 1;
+    let old = ctor.prototype.connectedCallback || noop;
+    ctor.prototype.connectedCallback = function(){
+        this.first && this.set();
+        old();
+    }
+    
+    
+}
 export function decorate(ctor, render) {
     ctor.prototype.set = set(render);
     decorateOutputs(ctor);
     decorateInputs(ctor);
     decorateElementRef(ctor);
     decorateRef(ctor);
+    connectedCallback(ctor);
     ctor.bootstrap = bootstrap;
 }

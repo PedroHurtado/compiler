@@ -16,10 +16,10 @@ export function changes(data, instance) {
 
 export function set(render) {
     return function (data) {
-        if (this.first === undefined) {
-            this.first = 1;
+        if (this.first) {
             changes(data, this)
             render(this);
+            this.first =0;
         } else {
             this.first = 0;
             if (changes(data, this)){
