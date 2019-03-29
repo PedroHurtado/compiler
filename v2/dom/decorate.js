@@ -51,15 +51,24 @@ function connectedCallback(ctor){
     let old = ctor.prototype.connectedCallback || noop;
     ctor.prototype.connectedCallback = function(){
         this.first && this.set();
+        let operation;
+        while(operation=this.pending.shift()){
+            let {fn,args} = operation;
+            fn(...args);
+            operation = null;
+        }
+        this.pending = null;
         old();
     }
 }
 export function decorate(ctor, render) {
     ctor.prototype.set = set(render);
+    ctor.prototype.pending = [];
     decorateOutputs(ctor);
     decorateInputs(ctor);
     decorateElementRef(ctor);
     decorateRef(ctor);
     connectedCallback(ctor);
     ctor.bootstrap = bootstrap;
+    
 }

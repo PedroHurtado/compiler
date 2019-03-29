@@ -25,7 +25,7 @@ const DEFAULTNODE = {
   index: 0,
 };
 export class VDom {
-  constructor( instance) {
+  constructor(instance) {
     this.first = instance.first;
     this.target = instance.target || instance;
     this.instance = instance;
@@ -257,35 +257,7 @@ export class VDom {
       events[event].scope = scope;
     }
   }
-  createAdjacentHTML(child) {
-    if (child.state && child.state.html) {
-      insertAdjacentHTML(child.node, child.state.html);
-    }
-  }
-  createNodes(target) {
-    let rootNodes = [];
 
-    for (let [key, value] of this.created) {
-      let { node, parentKey, children } = value;
-      children.forEach(child => {
-        append(node, child.node, child.next);
-        this.createAdjacentHTML(child);
-        child = null;
-      });
-      if (!this.created.get(parentKey)) {
-        rootNodes.push(value);
-      }
-    }
-    rootNodes.forEach(item => {
-      let { node, parent } = item;
-      if (parent.node) {
-        append(parent.node, node, item.next);
-      } else {
-        append(this.target, node, item.next);
-      }
-      this.createAdjacentHTML(item);
-    });
-  }
   removeEvents(node) {
     let events = node.__events;
     if (events) {
@@ -319,6 +291,49 @@ export class VDom {
         removeAdjacentHTML(node);
       }
       remove(node);
+    });
+  }
+
+  createAdjacentHTML(child) {
+    if (child.state && child.state.html) {
+      if(this.first){
+        this.instance.pending.push({
+          fn:insertAdjacentHTML,args:[child.node,child.state.html]
+        })
+      }else{
+        insertAdjacentHTML(child.node, child.state.html);
+      }
+    }
+  }
+  createNodes(target) {
+    let rootNodes = [];
+
+    for (let [key, value] of this.created) {
+      let { node, parentKey, children } = value;
+      children.forEach(child => {
+        append(node, child.node, child.next);
+        this.createAdjacentHTML(child);
+        child = null;
+      });
+      if (!this.created.get(parentKey)) {
+        rootNodes.push(value);
+      }
+    }
+    rootNodes.forEach(item => {
+      let { node, parent } = item;
+      if (parent.node) {
+        append(parent.node, node, item.next);
+      } else {
+        if (this.first) {
+          this.instance.pending.push(
+            { fn:append, args: [this.target, node, null] }
+          );
+        }
+        else{
+          append(this.target, node, item.next);
+        }
+      }
+      this.createAdjacentHTML(item);
     });
   }
   close() {
