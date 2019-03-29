@@ -48,7 +48,7 @@ function decorateRef(ctor){
 }
 function connectedCallback(ctor){
     ctor.prototype.first = 1;
-    let old = ctor.prototype.connectedCallback || noop;
+    let old = ctor.prototype.connectedCallback;
     ctor.prototype.connectedCallback = function(){
         this.first && this.set();
         let operation;
@@ -58,7 +58,7 @@ function connectedCallback(ctor){
             operation = null;
         }
         this.pending = null;
-        old();
+        old && old();
     }
 }
 export function decorate(ctor, render) {
