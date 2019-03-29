@@ -18,15 +18,12 @@ if(value){
         </li>
     });
 </ul>
-<div>
-    html`esto es una prueba {html}`
-</div>
 <x-bar in:description="{text} está cuerdo"></x-bar>
+html`esto es una prueba {html}`
 <style>
     .hello {
         font-size: 2em;
     }
-
     .container {
         color: blue;
     }
@@ -38,9 +35,6 @@ if(value){
 <script>
     import {} from './bar.js';
     export default class App extends HTMLElement {
-        constructor() {
-            super();
-        }
         click(name) {
             this.set({ value:!this.value });
         }
@@ -52,7 +46,7 @@ if(value){
                 color:'blue',
                 value: true,
                 text: 'Almo',
-                html:'<p>Hello</p>',
+                html:'<b>Hello</b>',
                 active: 1,
                 items: [
                     { name: 'Pedro' }, { name: 'Hurtado' }

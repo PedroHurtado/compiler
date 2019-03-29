@@ -5,9 +5,7 @@ const { SCOPE } = require('./constans')
 
 module.exports = function transformCreateVDom() {
     let templateContent = `
-            var first = $.first,
-                target = $.target || $,
-                vdom = new VDom(first, target, $);
+            var vdom = new VDom($);
             `
     let mapObject = {
         $: SCOPE

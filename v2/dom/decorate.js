@@ -53,8 +53,6 @@ function connectedCallback(ctor){
         this.first && this.set();
         old();
     }
-    
-    
 }
 export function decorate(ctor, render) {
     ctor.prototype.set = set(render);

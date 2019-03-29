@@ -17,9 +17,7 @@ decorate(Bar, render);
 define(Bar);
 
 function render($) {
-  var first = $.first,
-      target = $.target || $,
-      vdom = new VDom(first, target);
+  var vdom = new VDom($);
   vdom.append(0, 0, 0, 'div', 'div');
   vdom.appendText(0, 0, 0, 'text', 0, $.description);
   vdom.closeElement();

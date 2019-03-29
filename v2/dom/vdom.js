@@ -16,10 +16,18 @@ import {
 
 
 const TARGETKEY = 0;
+const DEFAULTNODE = {
+  tag: null,
+  action: "c",
+  state: null,
+  parent: null,
+  parentKey: null,
+  index: 0,
+};
 export class VDom {
-  constructor(first, target,instance) {
-    this.first = first;
-    this.target = target;
+  constructor( instance) {
+    this.first = instance.first;
+    this.target = instance.target || instance;
     this.instance = instance;
     this.inizialice();
   }
@@ -32,16 +40,16 @@ export class VDom {
     this.currentNode = null;
     this.parents = [this.currentParent];
     if (!this.first) {
-      this.hidrate(this.target,this.target.__instanceKey);
+      this.hidrate(this.target, this.target.__instanceKey);
     }
-    else{
+    else {
       this.target.__instanceKey = Date.now();
     }
   }
-  hidrate(target,instanceKey) {
+  hidrate(target, instanceKey) {
     let parentKey = target.__key;
     for (let value of target.childNodes) {
-      let { __key, __state , __style,childNodes } = value;
+      let { __key, __state, __style, childNodes } = value;
       if (value.__key && value.__instanceParentKey === instanceKey) {
         this.last.set(
           __key,
@@ -54,7 +62,7 @@ export class VDom {
           })
         );
         if (childNodes) {
-          this.hidrate(value,instanceKey);
+          this.hidrate(value, instanceKey);
         }
       }
     }
@@ -62,9 +70,9 @@ export class VDom {
   generateKey(...key) {
     return key.join(".");
   }
- 
+
   getDefault(init) {
-    let defaultNode = Object.assign({}, VDom.default(), init);
+    let defaultNode = Object.assign({}, DEFAULTNODE, init);
     defaultNode.children = [];
     Object.defineProperty(defaultNode, "next", {
       get: function () {
@@ -77,63 +85,71 @@ export class VDom {
     });
     return defaultNode;
   }
-  createCurrentNode(key, tag, parent) {
+  getOrCreateNode(key, tag) {
+    let parent = this.currentParent;
     if (this.first) {
-      return this.getDefault({ key:key, tag, parent, parentKey: parent.key });
+      return this.getDefault({ key: key, tag, parent, parentKey: parent.key });
     } else {
       let current = this.last.get(key);
       if (current) {
         this.last.delete(key);
         return current;
       }
-      return this.getDefault({ key:key,tag, parent, parentKey: parent.key });
+      return this.getDefault({ key: key, tag, parent, parentKey: parent.key });
     }
   }
-  addDom(key, currentNode) {
-    this.created.set(key, currentNode);
+  addDom(key, node) {
+    this.currentNode.node = node;
+    this.currentNode.node.__key = key;
+    this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
+    this.created.set(key, this.currentNode);
   }
-
-  append(block, key, subkey, tagKey, tag,namespace=0) {
+  addToParent() {
+    this.currentNode.index = this.currentParent.children.push(this.currentNode) - 1;
+  }
+  getState() {
+    return (this.currentNode.state = this.currentNode.state || {});
+  }
+  createState(key, value) {
+    let state = this.getState();
+    state[key] = value;
+    this.currentNode.node.__state = state;
+  }
+  updateState(key, value) {
+    let state = this.getState();
+    if (state[key] !== value) {
+      state[key] = value;
+      return true;
+    }
+    return false;
+  }
+  append(block, key, subkey, tagKey, tag, namespace = 0) {
     key = this.generateKey(block, key, subkey, tagKey);
-    let parent = this.currentParent;
-    this.currentNode = this.createCurrentNode(key, tag, parent);
+    this.currentNode = this.getOrCreateNode(key, tag);
     let { action } = this.currentNode;
     if (action === "c") {
-      this.currentNode.node = create(tag,namespace);
-      this.currentNode.node.__key = key;
-      this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
-      this.addDom(key, this.currentNode);
+      this.addDom(key, create(tag, namespace));
     }
-    this.currentNode.index = parent.children.push(this.currentNode) - 1;
+    this.addToParent();
     this.currentParent = this.currentNode;
     this.parents.push(this.currentParent);
   }
-
   appendText(block, key, subkey, tagKey, sealed, ...values) {
     key = this.generateKey(block, key, subkey, tagKey);
     let value = values.join("");
-    let parent = this.currentParent;
-    this.currentNode = this.createCurrentNode(key, "text", parent);
+    this.currentNode = this.getOrCreateNode(key, "text");
     let { action, node } = this.currentNode;
-    let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
-      this.currentNode.node = createText(value);
-      this.currentNode.node.__key = key;
-      this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
-      this.addDom(key, this.currentNode);
+      this.addDom(key, createText(value));
       if (sealed === 0) {
-        state['text'] = value;
-        this.currentNode.node.__state = state;
+        this.createState('text', value)
       }
-      
     } else if (sealed === 0) {
-      if (state['text'] !== value) {
-        state['text'] = value;
-        updateText(node, value);
+      if (this.updateState('text', value)) {
+        updateText(node, value)
       }
     }
-    this.currentNode.index = parent.children.push(this.currentNode) - 1;
-
+    this.addToParent();
   }
   appendComponent(block, key, subkey, tagKey, tag) {
     this.append(block, key, subkey, tagKey, tag);
@@ -170,8 +186,8 @@ export class VDom {
     instance[outputName] = handler;
     handler.scope = scope;
   }
-  ref(name){
-    let {node} = this.currentNode;
+  ref(name) {
+    let { node } = this.currentNode;
     this.instance.refs[name] = node;
     node.__ref = name;
   }
@@ -182,22 +198,18 @@ export class VDom {
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
     let { action, node } = this.currentNode;
-    let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
       if (sealed === 0) {
-        state[attr]=value;
-        node.__state = state;
+        this.createState(attr, value);
       }
       setAttribute(node, attr, value);
     } else if (sealed === 0) {
-      let old = state[attr];
-      if (old!=value) {
-        state[attr]= value;
+      if (this.updateState(attr)) {
         setAttribute(node, attr, value);
       }
     }
   }
-  style(sealed, prop, ...values){
+  style(sealed, prop, ...values) {
     let value = values.join("");
     let { action, node } = this.currentNode;
     let state = (this.currentNode.style = this.currentNode.style || {});
@@ -215,31 +227,24 @@ export class VDom {
       }
     }
   }
-  html(block, key, subkey, tagKey, sealed, ...values){
+  html(block, key, subkey, tagKey, sealed, ...values) {
     key = this.generateKey(block, key, subkey, tagKey);
     let value = values.join("");
-    let parent = this.currentParent;
-    this.currentNode = this.createCurrentNode(key, "noscript", parent);
+    this.currentNode = this.getOrCreateNode(key, "noscript");
     let { action, node } = this.currentNode;
-    let state = (this.currentNode.state = this.currentNode.state || {});
     if (action === "c") {
-      this.currentNode.node = create('noscript',0);
-      this.currentNode.node.__key = key;
-      this.currentNode.node.__instanceParentKey = this.target.__instanceKey;
-      this.addDom(key, this.currentNode);
+      this.addDom(key, create('noscript', 0));
       if (sealed === 0) {
-        state['html'] = value;
-        this.currentNode.node.__state = state;
+        this.createState('html', value)
       }
-      
+
     } else if (sealed === 0) {
-      if (state['html'] !== value) {
-        state['html'] = value;
+      if (this.updateState('html', value)) {
         removeAdjacentHTML(node);
-        insertAdjacentHTML(node,value);
+        insertAdjacentHTML(node, value);
       }
     }
-    this.currentNode.index = parent.children.push(this.currentNode) - 1;
+    this.addToParent();
   }
   appendEvent(event, handler, scope) {
     let { node, action } = this.currentNode;
@@ -252,9 +257,9 @@ export class VDom {
       events[event].scope = scope;
     }
   }
-  checkAdjacentElement(child){
-    if(child.state && child.state.html){
-      insertAdjacentHTML(child.node,child.state.html);
+  createAdjacentHTML(child) {
+    if (child.state && child.state.html) {
+      insertAdjacentHTML(child.node, child.state.html);
     }
   }
   createNodes(target) {
@@ -263,8 +268,8 @@ export class VDom {
     for (let [key, value] of this.created) {
       let { node, parentKey, children } = value;
       children.forEach(child => {
-        append(node,child.node,child.next);
-        this.checkAdjacentElement(child);
+        append(node, child.node, child.next);
+        this.createAdjacentHTML(child);
         child = null;
       });
       if (!this.created.get(parentKey)) {
@@ -278,7 +283,7 @@ export class VDom {
       } else {
         append(this.target, node, item.next);
       }
-      this.checkAdjacentElement(item);
+      this.createAdjacentHTML(item);
     });
   }
   removeEvents(node) {
@@ -291,9 +296,9 @@ export class VDom {
       node.__events = null;
     }
   }
-  removeRef(node){
-    let {__ref} = node; 
-    if(__ref && this.instance.refs){
+  removeRef(node) {
+    let { __ref } = node;
+    if (__ref && this.instance.refs) {
       delete this.instance.refs[__ref];
     }
   }
@@ -309,8 +314,8 @@ export class VDom {
       }
     }
     rootNodes.forEach(node => {
-      let {__state} = node;
-      if(__state && __state.html){
+      let { __state } = node;
+      if (__state && __state.html) {
         removeAdjacentHTML(node);
       }
       remove(node);
@@ -319,6 +324,9 @@ export class VDom {
   close() {
     this.removeNodes();
     this.createNodes();
+    this.dispose();
+  }
+  dispose() {
     this.last = null;
     this.currentNode = null;
     this.created = null;
@@ -326,16 +334,5 @@ export class VDom {
     this.currentParent = null;
     this.parents = null;
     this.instance = null;
-  }
-  static default() {
-    return {
-      tag: null,
-      action: "c",
-      state: null,
-      parent: null,
-      parentKey: null,
-      children: null,
-      index: 0
-    };
   }
 }
