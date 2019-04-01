@@ -36,10 +36,10 @@ export function style(node, property, value) {
 export function remove(node) {
     node.parentNode.removeChild(node);
 }
-export function removeAdjacentHTML(node){
-    while(node.previousSibling){
-        let {__key} = node.previousSibling;
-        if(__key){
+export function removeAdjacentHTML(node) {
+    while (node.previousSibling) {
+        let { __key } = node.previousSibling;
+        if (__key) {
             break;
         }
         remove(node.previousSibling);
@@ -48,8 +48,8 @@ export function removeAdjacentHTML(node){
 export function appendClass(node, className) {
     node.className = className.trim();
 }
-export function insertAdjacentHTML(node,html){
-    let result = node.insertAdjacentHTML('beforebegin',html)
+export function insertAdjacentHTML(node, html) {
+    let result = node.insertAdjacentHTML('beforebegin', html)
 }
 export function createEvent(node, event, handler) {
     node.addEventListener(event, handler)
@@ -57,12 +57,18 @@ export function createEvent(node, event, handler) {
 export function removeEvent(node, event, handler) {
     node.removeEventListener(event, handler);
 }
-export function walker(root,instaceKey){
-    return document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT,function(node){
-        let {__key,__instanceParentKey} = node;
-        if(__key && __instanceParentKey===instaceKey){
+export function walker(root, instaceKey) {
+    const filter = function (node) {
+        let { __key, __instanceParentKey } = node;
+        if (__key && __instanceParentKey === instaceKey) {
             return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_REJECT;
-    },false)
+    };
+    return document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+        filter,
+        false
+    );
 }
