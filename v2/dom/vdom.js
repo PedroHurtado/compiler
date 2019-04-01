@@ -12,6 +12,7 @@ import {
   removeEvent,
   insertAdjacentHTML,
   removeAdjacentHTML,
+  walker,
 } from "./domfunctions.js";
 
 
@@ -46,25 +47,20 @@ export class VDom {
       this.target.__instanceKey = Date.now();
     }
   }
-  hidrate(target, instanceKey) {
-    let parentKey = target.__key;
-    for (let value of target.childNodes) {
-      let { __key, __state, __style, childNodes } = value;
-      if (value.__key && value.__instanceParentKey === instanceKey) {
-        this.last.set(
-          __key,
-          this.getDefault({
-            node: value,
-            state: __state,
-            style: __style,
-            action: "",
-            parentKey: parentKey
-          })
-        );
-        if (childNodes) {
-          this.hidrate(value, instanceKey);
-        }
-      }
+  hidrate(root, instanceKey) {
+    let treeWalker = walker(root, instanceKey);
+    let node;
+    while ((node = treeWalker.nextNode())) {
+      let { __key, __state, __style } = node;
+      this.last.set(
+        __key,
+        this.getDefault({
+          node,
+          state: __state,
+          style: __style,
+          action: ""
+        })
+      );
     }
   }
   generateKey(...key) {
@@ -85,17 +81,17 @@ export class VDom {
     });
     return defaultNode;
   }
-  getOrCreateNode(key, tag) {
+  getOrCreateNode(key) {
     let parent = this.currentParent;
     if (this.first) {
-      return this.getDefault({ key: key, tag, parent, parentKey: parent.key });
+      return this.getDefault({ key: key });
     } else {
       let current = this.last.get(key);
       if (current) {
         this.last.delete(key);
         return current;
       }
-      return this.getDefault({ key: key, tag, parent, parentKey: parent.key });
+      return this.getDefault({ key: key });
     }
   }
   addDom(key, node) {
@@ -105,6 +101,8 @@ export class VDom {
     this.created.set(key, this.currentNode);
   }
   addToParent() {
+    this.currentNode.parent = this.currentParent;
+    this.currentNode.parentKey = this.currentParent.parentKey
     this.currentNode.index = this.currentParent.children.push(this.currentNode) - 1;
   }
   getState() {
@@ -296,11 +294,11 @@ export class VDom {
 
   createAdjacentHTML(child) {
     if (child.state && child.state.html) {
-      if(this.first){
+      if (this.first) {
         this.instance.pending.push({
-          fn:insertAdjacentHTML,args:[child.node,child.state.html]
+          fn: insertAdjacentHTML, args: [child.node, child.state.html]
         })
-      }else{
+      } else {
         insertAdjacentHTML(child.node, child.state.html);
       }
     }
@@ -326,10 +324,10 @@ export class VDom {
       } else {
         if (this.first) {
           this.instance.pending.push(
-            { fn:append, args: [this.target, node, null] }
+            { fn: append, args: [this.target, node, null] }
           );
         }
-        else{
+        else {
           append(this.target, node, item.next);
         }
       }

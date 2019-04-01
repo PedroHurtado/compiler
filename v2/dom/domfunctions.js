@@ -57,3 +57,12 @@ export function createEvent(node, event, handler) {
 export function removeEvent(node, event, handler) {
     node.removeEventListener(event, handler);
 }
+export function walker(root,instaceKey){
+    return document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT,function(node){
+        let {__key,__instanceParentKey} = node;
+        if(__key && __instanceParentKey===instaceKey){
+            return NodeFilter.FILTER_ACCEPT;
+        }
+        return NodeFilter.FILTER_REJECT;
+    },false)
+}
