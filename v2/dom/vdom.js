@@ -18,12 +18,8 @@ import {
 
 const TARGETKEY = 0;
 const DEFAULTNODE = {
-  tag: null,
   action: "c",
   state: null,
-  parent: null,
-  parentKey: null,
-  index: 0,
 };
 export class VDom {
   constructor(instance) {
@@ -56,12 +52,14 @@ export class VDom {
         __key,
         this.getDefault({
           node,
+          key:__key,
           state: __state,
           style: __style,
           action: ""
         })
       );
     }
+    treeWalker = null;
   }
   generateKey(...key) {
     return key.join(".");
@@ -102,7 +100,7 @@ export class VDom {
   }
   addToParent() {
     this.currentNode.parent = this.currentParent;
-    this.currentNode.parentKey = this.currentParent.parentKey
+    this.currentNode.parentKey = this.currentParent.key
     this.currentNode.index = this.currentParent.children.push(this.currentNode) - 1;
   }
   getState() {
