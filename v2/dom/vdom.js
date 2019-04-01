@@ -15,12 +15,10 @@ import {
   walker,
 } from "./domfunctions.js";
 
+import { Node } from './node.js'
 
-const TARGETKEY = 0;
-const DEFAULTNODE = {
-  action: "c",
-  state: null,
-};
+const TARGETKEY = 'root';
+
 export class VDom {
   constructor(instance) {
     this.first = instance.first;
@@ -30,7 +28,8 @@ export class VDom {
   }
   inizialice() {
 
-    this.currentParent = this.getDefault({ action: "", key: TARGETKEY })
+    this.currentParent = new Node(TARGETKEY);
+    this.currentParent.action = "";
     this.last = new Map();
     this.last.set(TARGETKEY, this.currentParent);
     this.created = new Map();
@@ -45,51 +44,29 @@ export class VDom {
   }
   hidrate(root, instanceKey) {
     let treeWalker = walker(root, instanceKey);
-    let node;
-    while ((node = treeWalker.nextNode())) {
-      let { __key, __state, __style } = node;
-      this.last.set(
-        __key,
-        this.getDefault({
-          node,
-          key:__key,
-          state: __state,
-          style: __style,
-          action: ""
-        })
-      );
+    let domNode;
+    while ((domNode = treeWalker.nextNode())) {
+      let { __key, __state, __style } = domNode;
+      let parentKey = domNode.parentNode.__key || TARGETKEY;
+      let node = new Node(__key);
+      node.hidrate(domNode, __state, __style, parentKey);
+      this.last.set(__key, node);
     }
     treeWalker = null;
   }
   generateKey(...key) {
     return key.join(".");
   }
-
-  getDefault(init) {
-    let defaultNode = Object.assign({}, DEFAULTNODE, init);
-    defaultNode.children = [];
-    Object.defineProperty(defaultNode, "next", {
-      get: function () {
-        let sibiling = this.parent.children[this.index + 1];
-        if (sibiling && sibiling.node.parentNode) {
-          return sibiling.node;
-        }
-        return null;
-      }
-    });
-    return defaultNode;
-  }
   getOrCreateNode(key) {
-    let parent = this.currentParent;
     if (this.first) {
-      return this.getDefault({ key: key });
+      return new Node(key);
     } else {
       let current = this.last.get(key);
       if (current) {
         this.last.delete(key);
         return current;
       }
-      return this.getDefault({ key: key });
+      return new Node(key);
     }
   }
   addDom(key, node) {
@@ -121,9 +98,9 @@ export class VDom {
   }
   append(block, key, subkey, tagKey, tag, namespace = 0) {
     key = this.generateKey(block, key, subkey, tagKey);
-    this.currentNode = this.getOrCreateNode(key, tag);
+    this.currentNode = this.getOrCreateNode(key);
     let { action } = this.currentNode;
-    if (action === "c") {
+    if (action === Node.CREATED) {
       this.addDom(key, create(tag, namespace));
     }
     this.addToParent();
@@ -133,9 +110,9 @@ export class VDom {
   appendText(block, key, subkey, tagKey, sealed, ...values) {
     key = this.generateKey(block, key, subkey, tagKey);
     let value = values.join("");
-    this.currentNode = this.getOrCreateNode(key, "text");
+    this.currentNode = this.getOrCreateNode(key);
     let { action, node } = this.currentNode;
-    if (action === "c") {
+    if (action === Node.CREATED) {
       this.addDom(key, createText(value));
       if (sealed === 0) {
         this.createState('text', value)
@@ -194,7 +171,7 @@ export class VDom {
   appendAttribute(sealed, attr, ...values) {
     let value = values.join("");
     let { action, node } = this.currentNode;
-    if (action === "c") {
+    if (action === Node.CREATED) {
       if (sealed === 0) {
         this.createState(attr, value);
       }
@@ -209,7 +186,7 @@ export class VDom {
     let value = values.join("");
     let { action, node } = this.currentNode;
     let state = (this.currentNode.style = this.currentNode.style || {});
-    if (action === "c") {
+    if (action === Node.CREATED) {
       if (sealed === 0) {
         state[prop] = value;
         node.__style = state;
@@ -226,9 +203,9 @@ export class VDom {
   html(block, key, subkey, tagKey, sealed, ...values) {
     key = this.generateKey(block, key, subkey, tagKey);
     let value = values.join("");
-    this.currentNode = this.getOrCreateNode(key, "noscript");
+    this.currentNode = this.getOrCreateNode(key);
     let { action, node } = this.currentNode;
-    if (action === "c") {
+    if (action === Node.CREATED) {
       this.addDom(key, create('noscript', 0));
       if (sealed === 0) {
         this.createState('html', value)
@@ -245,7 +222,7 @@ export class VDom {
   appendEvent(event, handler, scope) {
     let { node, action } = this.currentNode;
     let events = (node.__events = node.__events || {});
-    if (action === "c") {
+    if (action === Node.CREATED) {
       events[event] = { handler, scope };
       createEvent(node, event, handler);
     } else {
