@@ -165,6 +165,20 @@ export class VDom {
     instance[outputName] = handler;
     handler.scope = scope;
   }
+  directive(name,value){
+    let _directive = getConstructor(name);
+    if(_directive){
+      let {action,node} = this.currentNode;
+      let instance;
+      node.__directives = node.__directives || {};
+      if(action === Node.CREATED){
+        instance = node.__directives[name] = new _directive.ctor();
+      }else{
+        instance = node.__directives[name]
+      }
+      instance.set(value);
+    }
+  }
   ref(name) {
     let { node } = this.currentNode;
     this.instance.refs[name] = node;

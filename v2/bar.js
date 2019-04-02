@@ -1,6 +1,6 @@
 import { VDom, define, decorate, getEventScope } from './dom/index.js';
 
-class Bar {
+class Bar extends HTMLElement {
   static get tag() {
     return 'x-bar';
   }
@@ -18,7 +18,7 @@ define(Bar);
 
 function render($) {
   var vdom = new VDom($);
-  vdom.append(0, 0, 0, 'div', 'div');
+  vdom.append(0, 0, 0, 'div', 'div', 0);
   vdom.appendText(0, 0, 0, 'text', 0, $.description);
   vdom.closeElement();
   vdom.close();

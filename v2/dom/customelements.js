@@ -1,19 +1,25 @@
 const supportCustomElements = "customElements" in self;
-const noop = function(){}
+const noop = function () { }
 class Define {
   constructor() {
     this.types = new Map();
   }
   add(tag, ctor) {
-    if(!tag){
-        throw 'tag is not defined';
+    if (!tag) {
+      throw 'tag is not defined';
     }
     const htmlElement = self.HTMLElement || noop;
     const customElement = ctor.prototype instanceof htmlElement;
-    this.types.set(tag, {ctor,customElement});
+    this.types.set(tag, { ctor, customElement });
     if (customElement && (supportCustomElements && !self.customElements.get(tag))) {
       self.customElements.define(tag, ctor);
     }
+  }
+  addDirective(tag,ctor) {
+    if (!tag) {
+      throw 'tag is not defined';
+    }
+    this.types.set(tag,{ctor,directive:true});
   }
   get(tag) {
     return this.types.get(tag);
@@ -23,11 +29,17 @@ class Define {
 const _define = new Define();
 
 export function define(ctor) {
-   if(!ctor){
-       throw 'class is not defined';
-   }
+  if (!ctor) {
+    throw 'class is not defined';
+  }
   _define.add(ctor.tag, ctor);
 };
+export function defineDirective(ctor) {
+  if (!ctor) {
+    throw 'class is not defined';
+  }
+  _define.addDirective(ctor.tag, ctor);
+}
 export function getConstructor(tag) {
   return _define.get(tag);
 };

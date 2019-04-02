@@ -1,7 +1,7 @@
 const t = require('@babel/types');
 const { createMeta, getMeta, getNodeMeta, getFunctionName } = require('./helper/meta');
 const visitorEvents = require('./helper/events/visitorevents');
-const appendEvent=require('./helper/events/transformevents');
+const appendEvent = require('./helper/events/transformevents');
 const output = require('./helper/transforoutput');
 const {
     transformAppend,
@@ -36,8 +36,7 @@ function isScopeIdentifier(globlaScope, name, key) {
     return (
         !globlaScope.has(name) &&
         name !== '$' &&
-        name.indexOf('click_handler') === -1 &&
-        key != 'property'
+        (key != 'property' && key != 'key')
     );
 }
 
@@ -89,13 +88,13 @@ const visitor = {
             let args = node.arguments;
             let name = getFunctionName(node.callee);
 
-            if (name === APPEND || name===APPPENDCOMPONENT) {
+            if (name === APPEND || name === APPPENDCOMPONENT) {
                 node.arguments = transformAppend(args, block);
                 path.skip();
             } else if (name === APPENDTEXT || name === HTML) {
                 node.arguments = transformText(args, block);
                 path.skip();
-            } else if (name === APPENDATTRIBUTE || name===STYLE) {
+            } else if (name === APPENDATTRIBUTE || name === STYLE) {
                 node.arguments = transformAttribute(args);
                 path.skip();
             } else if (name === FOREACH) {
@@ -108,12 +107,12 @@ const visitor = {
             } else if (name === APPENDEVENT) {
                 let scope = { node: node, keys: new Set() };
                 path.traverse(visitorEvents, scope);
-                let {_arguments,statements} = appendEvent(path,args,scope.keys);
+                let { _arguments, statements } = appendEvent(path, args, scope.keys);
                 this.events.push(...statements);
                 node.arguments = _arguments;
                 path.skip();
-            }else if(name=== OUTPUT){
-                let {_arguments,statements} = output(path,args);
+            } else if (name === OUTPUT) {
+                let { _arguments, statements } = output(path, args);
                 this.events.push(...statements);
                 node.arguments = _arguments;
                 path.skip();
@@ -124,7 +123,7 @@ const visitor = {
         Object.keys(path.scope.bindings).forEach(name => {
             this.globalScope.add(name);
         });
-        let { node, key } = path;
+        let { node, key, parent } = path;
         let { name } = node;
         if (isScopeIdentifier(this.globalScope, name, key)) {
             path.skip();

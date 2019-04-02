@@ -10,6 +10,9 @@ const reserved = {
   out: (name, value) => {
     return `vdom.output('${value}',${name},{$});`
   },
+  d:(name,value)=>{
+    return `vdom.directive('${name}',${value});`
+  },
   ref: (name) => {
     return `vdom.ref('${name}');`
   },
@@ -44,6 +47,8 @@ module.exports = function attributes(attrs) {
           properties.push(reserved[name[0]](name[1], getParameters(value)));
         } else if (name[0] === 'ref') {
           processed.push(reserved[name[0]](name[1]));
+        } else if(name[0] === 'd'){
+          processed.push(reserved[name[0]](name[1], attr.value));
         } else {
           processed.push(reserved[name[0]](value[0].text, name[1]));
         }

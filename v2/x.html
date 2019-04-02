@@ -1,6 +1,6 @@
 t`Hello`
 if(value){
-    <div ref:hello>t`Hola`</div>
+    <div ref:hello d:directive={a:value}>t`Hola`</div>
 }else{
     <div style="color:{color};position:absolute;">t`Hola1`</div>
 }
@@ -8,7 +8,7 @@ if(value){
     items.forEach(car=>{
         let {name} = car;
         let characters = name.split('');
-        <li on:click="click(name,active)">
+        <li on:click=click(name,active)>
             t`{name}`
             <ul>
                 characters.forEach(character=>{
@@ -18,7 +18,7 @@ if(value){
         </li>
     });
 </ul>
-<x-bar hidden="{value}" in:description="{text} está cuerdo"></x-bar>
+<x-bar in:description="{text} está cuerdo"></x-bar>
 html`esto es una prueba {html}`
 <style>
     .hello {
@@ -34,6 +34,7 @@ html`esto es una prueba {html}`
 </style>
 <script>
     import {} from './bar.js';
+    import {} from './directive.js';
     export default class App extends HTMLElement {
         click(name) {
             this.set({ value:!this.value });

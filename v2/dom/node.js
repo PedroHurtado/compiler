@@ -12,14 +12,16 @@ export class Node {
         this.instance = null;
     }
     get next() {
-        let sibiling = this.parent.children[this.index + 1];
-        if (sibiling && sibiling.node.parentNode) {
-            return sibiling.node;
+        if (this.parent) {
+            let sibiling = this.parent.children[this.index + 1];
+            if (sibiling && sibiling.node.parentNode) {
+                return sibiling.node;
+            }
         }
         return null;
     }
-    hidrate(node,state,style,instance,parentKey){
-        this.node=node;
+    hidrate(node, state, style, instance, parentKey) {
+        this.node = node;
         this.state = state;
         this.style = style;
         this.parentKey = parentKey;
