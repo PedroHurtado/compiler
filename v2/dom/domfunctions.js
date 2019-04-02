@@ -18,16 +18,20 @@ export function append(parent, node, anchor) {
     parent.insertBefore(node, anchor);
 }
 export function createText(text) {
-    return document.createTextNode(text);
+    return document.createTextNode('' + text);
 }
 export function updateText(node, text) {
-    node.data = text;
+    node.data = '' + text;
 }
 export function setAttribute(node, attr, value) {
     if (name === 'class') {
         appendClass(value);
     } else {
-        node.setAttribute(attr, value)
+        if (value) {
+            node.setAttribute(attr, '' + value)
+        } else {
+            node.removeAttribute(attr);
+        }
     }
 }
 export function style(node, property, value) {
@@ -69,6 +73,6 @@ export function walker(root, instaceKey) {
         root,
         NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
         filter,
-        false
+        true
     );
 }

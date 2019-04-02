@@ -174,8 +174,16 @@ export class VDom {
     this.parents.pop();
     this.currentParent = this.parents[this.parents.length - 1];
   }
+  getValueAttribute(values){
+    if(values.length>1){
+      return values.join("");
+    }
+    else{
+      return values[0];
+    }
+  }
   appendAttribute(sealed, attr, ...values) {
-    let value = values.join("");
+    let value = this.getValueAttribute(values);
     let { action, node } = this.currentNode;
     if (action === Node.CREATED) {
       if (sealed === 0) {
@@ -183,7 +191,7 @@ export class VDom {
       }
       setAttribute(node, attr, value);
     } else if (sealed === 0) {
-      if (this.updateState(attr)) {
+      if (this.updateState(attr,value)) {
         setAttribute(node, attr, value);
       }
     }
