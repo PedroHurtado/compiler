@@ -17,12 +17,13 @@ import {
 
 import { Node } from './node.js'
 
+
 const TARGETKEY = 'root';
 
 export class VDom {
   constructor(instance) {
     this.first = instance.first;
-    this.target = instance.target || instance;
+    this.target = instance.target || instance.__node || instance;
     this.instance = instance;
     this.inizialice();
   }
@@ -46,10 +47,10 @@ export class VDom {
     let treeWalker = walker(root, instanceKey);
     let domNode;
     while ((domNode = treeWalker.nextNode())) {
-      let { __key, __state, __style } = domNode;
+      let { __key, __state, __style, __instance } = domNode;
       let parentKey = domNode.parentNode.__key || TARGETKEY;
       let node = new Node(__key);
-      node.hidrate(domNode, __state, __style, parentKey);
+      node.hidrate(domNode, __state, __style, __instance, parentKey);
       this.last.set(__key, node);
     }
     treeWalker = null;
@@ -128,9 +129,14 @@ export class VDom {
     this.append(block, key, subkey, tagKey, tag);
     let { ctor, customElement } = getConstructor(tag);
     if (!customElement) {
-      this.currentNode.instance = new ctor();
-    }
-    else {
+      if (this.currentNode.action === Node.CREATED) {
+        let instance = new ctor();
+        instance.invoke = true;
+        instance.__node = this.currentNode.node;
+        instance.__node.__instance = instance;
+        this.currentNode.instance = instance;
+      }
+    } else {
       this.currentNode.instance = this.currentNode.node;
     }
   }
@@ -284,6 +290,10 @@ export class VDom {
     for (let [key, value] of this.created) {
       let { node, parentKey, children } = value;
       children.forEach(child => {
+        let { instance } = child;
+        if (instance && instance.invoke) {
+          instance.connectedCallback();
+        }
         append(node, child.node, child.next);
         this.createAdjacentHTML(child);
         child = null;
@@ -293,7 +303,10 @@ export class VDom {
       }
     }
     rootNodes.forEach(item => {
-      let { node, parent } = item;
+      let { node, parent,instance } = item;
+      if(instance && instance.invoke){
+        instance.connectedCallback();
+      }
       if (parent.node) {
         append(parent.node, node, item.next);
       } else {

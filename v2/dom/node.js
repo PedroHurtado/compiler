@@ -9,6 +9,7 @@ export class Node {
         this.node = null;
         this.state = null;
         this.style = null;
+        this.instance = null;
     }
     get next() {
         let sibiling = this.parent.children[this.index + 1];
@@ -17,11 +18,12 @@ export class Node {
         }
         return null;
     }
-    hidrate(node,state,style,parentKey){
+    hidrate(node,state,style,instance,parentKey){
         this.node=node;
         this.state = state;
         this.style = style;
         this.parentKey = parentKey;
+        this.instance = instance;
         this.action = "";
     }
 }
