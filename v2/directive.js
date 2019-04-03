@@ -1,4 +1,4 @@
-import {defineDirective} from './dom/customelements.js'
+import {defineDirective} from './dom/index.js'
 class Directive{
     constructor(node,component){
         this.node = node;

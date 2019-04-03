@@ -1,10 +1,9 @@
 import { VDom, define, decorate, getEventScope } from './dom/index.js';
 
-class Bar extends HTMLElement {
+class Bar {
   static get tag() {
     return 'x-bar';
   }
-
   static get inputs() {
     return {
       description: "pedro"
