@@ -53,7 +53,7 @@ export function appendClass(node, className) {
     node.className = className.trim();
 }
 export function insertAdjacentHTML(node, html) {
-    let result = node.insertAdjacentHTML('beforebegin', html)
+    node.insertAdjacentHTML('beforebegin', html)
 }
 export function createEvent(node, event, handler) {
     node.addEventListener(event, handler)

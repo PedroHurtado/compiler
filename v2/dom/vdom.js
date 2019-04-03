@@ -165,19 +165,25 @@ export class VDom {
     instance[outputName] = handler;
     handler.scope = scope;
   }
-  directive(name,value){
+  directive(name, value) {
     let _directive = getConstructor(name);
-    if(_directive){
-      let {action,node} = this.currentNode;
+    if (_directive) {
+      let { action, node } = this.currentNode;
       let instance;
       node.__directives = node.__directives || {};
-      if(action === Node.CREATED){
-        instance = node.__directives[name] = new _directive.ctor();
-      }else{
-        instance = node.__directives[name]
+      if (action === Node.CREATED) {
+        instance = node.__directives[name] = new _directive.ctor(
+          node,
+          this.instance
+        );
+      } else {
+        instance = node.__directives[name];
       }
-      instance.set(value);
+      if (value) {
+        instance.set(value);
+      }
     }
+
   }
   ref(name) {
     let { node } = this.currentNode;
@@ -188,11 +194,11 @@ export class VDom {
     this.parents.pop();
     this.currentParent = this.parents[this.parents.length - 1];
   }
-  getValueAttribute(values){
-    if(values.length>1){
+  getValueAttribute(values) {
+    if (values.length > 1) {
       return values.join("");
     }
-    else{
+    else {
       return values[0];
     }
   }
@@ -205,7 +211,7 @@ export class VDom {
       }
       setAttribute(node, attr, value);
     } else if (sealed === 0) {
-      if (this.updateState(attr,value)) {
+      if (this.updateState(attr, value)) {
         setAttribute(node, attr, value);
       }
     }
@@ -275,6 +281,17 @@ export class VDom {
       delete this.instance.refs[__ref];
     }
   }
+  removeDirectives(node){
+    if(node.__directives){
+      for(let key in node.__directives){
+        let directive = node.__directives[key];
+        if('disconnectedCallback' in directive){
+          directive.disconnectedCallback();
+        }
+      }
+      node.__directives = null;
+    }
+  }
   removeNodes() {
     let rootNodes = [];
     this.last.delete(TARGETKEY);
@@ -282,6 +299,7 @@ export class VDom {
       let { node, parentKey } = value;
       this.removeEvents(node);
       this.removeRef(node);
+      this.removeDirectives(node);
       if (!this.last.get(parentKey)) {
         rootNodes.push(node);
       }
@@ -306,8 +324,20 @@ export class VDom {
       }
     }
   }
+  connectDirectives(directives){
+    let nodeDirectives;
+    while(nodeDirectives=directives.shift()){
+      for(let key in nodeDirectives){
+        let directive = nodeDirectives[key];
+        if('connectedCallback' in directive){
+          directive.connectedCallback();
+        }
+      }
+    }
+  }
   createNodes(target) {
     let rootNodes = [];
+    let directives = [];
 
     for (let [key, value] of this.created) {
       let { node, parentKey, children } = value;
@@ -323,10 +353,13 @@ export class VDom {
       if (!this.created.get(parentKey)) {
         rootNodes.push(value);
       }
+      if(node.__directives){
+        directives.push(node.__directives);
+      }
     }
     rootNodes.forEach(item => {
-      let { node, parent,instance } = item;
-      if(instance && instance.invoke){
+      let { node, parent, instance } = item;
+      if (instance && instance.invoke) {
         instance.connectedCallback();
       }
       if (parent.node) {
@@ -343,6 +376,7 @@ export class VDom {
       }
       this.createAdjacentHTML(item);
     });
+    this.connectDirectives(directives);
   }
   close() {
     this.removeNodes();

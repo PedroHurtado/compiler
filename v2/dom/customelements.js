@@ -1,3 +1,5 @@
+import { decorateDirective } from './decoratedirective.js'
+
 const supportCustomElements = "customElements" in self;
 const noop = function () { }
 class Define {
@@ -5,9 +7,6 @@ class Define {
     this.types = new Map();
   }
   add(tag, ctor) {
-    if (!tag) {
-      throw 'tag is not defined';
-    }
     const htmlElement = self.HTMLElement || noop;
     const customElement = ctor.prototype instanceof htmlElement;
     this.types.set(tag, { ctor, customElement });
@@ -15,11 +14,8 @@ class Define {
       self.customElements.define(tag, ctor);
     }
   }
-  addDirective(tag,ctor) {
-    if (!tag) {
-      throw 'tag is not defined';
-    }
-    this.types.set(tag,{ctor,directive:true});
+  addDirective(tag, ctor) {
+    this.types.set(tag, { ctor, directive: true });
   }
   get(tag) {
     return this.types.get(tag);
@@ -28,16 +24,22 @@ class Define {
 
 const _define = new Define();
 
-export function define(ctor) {
+function validateCtor(ctor) {
   if (!ctor) {
     throw 'class is not defined';
   }
+  if (!ctor.tag) {
+    throw 'tag is not defined';
+  }
+}
+
+export function define(ctor) {
+  validateCtor(ctor);
   _define.add(ctor.tag, ctor);
 };
 export function defineDirective(ctor) {
-  if (!ctor) {
-    throw 'class is not defined';
-  }
+  validateCtor(ctor);
+  decorateDirective(ctor);
   _define.addDirective(ctor.tag, ctor);
 }
 export function getConstructor(tag) {
