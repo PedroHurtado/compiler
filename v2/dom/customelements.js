@@ -6,12 +6,17 @@ class Define {
   constructor() {
     this.types = new Map();
   }
-  add(tag, ctor) {
+  add(tag, extend, ctor) {
     const htmlElement = self.HTMLElement || noop;
     const customElement = ctor.prototype instanceof htmlElement;
-    this.types.set(tag, { ctor, customElement });
+    this.types.set(tag, { ctor, customElement, extend });
     if (customElement && (supportCustomElements && !self.customElements.get(tag))) {
-      self.customElements.define(tag, ctor);
+      if(extend){
+        self.customElements.define(tag,ctor,{extends:extend})
+      }else
+      {
+        self.customElements.define(tag, ctor);
+      }
     }
   }
   addDirective(tag, ctor) {
@@ -35,7 +40,7 @@ function validateCtor(ctor) {
 
 export function define(ctor) {
   validateCtor(ctor);
-  _define.add(ctor.tag, ctor);
+  _define.add(ctor.tag, ctor.extend, ctor);
 };
 export function defineDirective(ctor) {
   validateCtor(ctor);

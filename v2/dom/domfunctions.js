@@ -3,9 +3,13 @@ const NAMESPACES = {
     '1': 'http://www.w3.org/2000/svg'
 }
 
-export function create(tag, namespace) {
+export function create(tag, namespace,extend) {
     if (namespace === 0) {
-        return document.createElement(tag);
+        if(extend){
+            return document.createElement(extend,{is:tag});
+        }else{
+            return document.createElement(tag);
+        }
     }
     else {
         return document.createElementNS(

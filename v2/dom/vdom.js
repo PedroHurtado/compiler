@@ -97,12 +97,12 @@ export class VDom {
     }
     return false;
   }
-  append(block, key, subkey, tagKey, tag, namespace = 0) {
+  append(block, key, subkey, tagKey, tag, namespace = 0, extend = null) {
     key = this.generateKey(block, key, subkey, tagKey);
     this.currentNode = this.getOrCreateNode(key);
     let { action } = this.currentNode;
     if (action === Node.CREATED) {
-      this.addDom(key, create(tag, namespace));
+      this.addDom(key, create(tag, namespace, extend));
     }
     this.addToParent();
     this.currentParent = this.currentNode;
@@ -126,8 +126,8 @@ export class VDom {
     this.addToParent();
   }
   appendComponent(block, key, subkey, tagKey, tag) {
-    this.append(block, key, subkey, tagKey, tag);
-    let { ctor, customElement } = getConstructor(tag);
+    let { ctor, customElement, extend } = getConstructor(tag);
+    this.append(block, key, subkey, tagKey, tag, 0,extend);
     if (!customElement) {
       if (this.currentNode.action === Node.CREATED) {
         let instance = new ctor();
@@ -281,11 +281,11 @@ export class VDom {
       delete this.instance.refs[__ref];
     }
   }
-  removeDirectives(node){
-    if(node.__directives){
-      for(let key in node.__directives){
+  removeDirectives(node) {
+    if (node.__directives) {
+      for (let key in node.__directives) {
         let directive = node.__directives[key];
-        if('disconnectedCallback' in directive){
+        if ('disconnectedCallback' in directive) {
           directive.disconnectedCallback();
         }
       }
@@ -324,12 +324,12 @@ export class VDom {
       }
     }
   }
-  connectDirectives(directives){
+  connectDirectives(directives) {
     let nodeDirectives;
-    while(nodeDirectives=directives.shift()){
-      for(let key in nodeDirectives){
+    while (nodeDirectives = directives.shift()) {
+      for (let key in nodeDirectives) {
         let directive = nodeDirectives[key];
-        if('connectedCallback' in directive){
+        if ('connectedCallback' in directive) {
           directive.connectedCallback();
         }
       }
@@ -353,7 +353,7 @@ export class VDom {
       if (!this.created.get(parentKey)) {
         rootNodes.push(value);
       }
-      if(node.__directives){
+      if (node.__directives) {
         directives.push(node.__directives);
       }
     }
