@@ -294,9 +294,14 @@ export class VDom {
   }
   removeNodes() {
     let rootNodes = [];
+    let components = [];
     this.last.delete(TARGETKEY);
     for (let [key, value] of this.last) {
       let { node, parentKey } = value;
+      let {instance} = node;
+      if(instance && instance.invoke){
+        components.push(instance);
+      }
       this.removeEvents(node);
       this.removeRef(node);
       this.removeDirectives(node);
@@ -310,6 +315,12 @@ export class VDom {
         removeAdjacentHTML(node);
       }
       remove(node);
+    });
+
+    components.forEach(component=>{
+      if('disconnectedCallback' in component){
+        component.disconnectedCallback();
+      }
     });
   }
 
