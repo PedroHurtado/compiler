@@ -74,7 +74,9 @@ export function removeEvent(node, event, handler) {
 export function attachShadow(node,mode){
     return node.attachShadow({mode:mode})
 }
+
 export function walker(root, instaceKey) {
+
     const filter = function (node) {
         let { __key, __instanceParentKey } = node;
         if (__key && __instanceParentKey === instaceKey) {
@@ -82,6 +84,7 @@ export function walker(root, instaceKey) {
         }
         return NodeFilter.FILTER_REJECT;
     };
+    
     return document.createTreeWalker(
         root,
         NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
