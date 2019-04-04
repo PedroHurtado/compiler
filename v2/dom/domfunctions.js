@@ -57,13 +57,22 @@ export function appendClass(node, className) {
     node.className = className.trim();
 }
 export function insertAdjacentHTML(node, html) {
-    node.insertAdjacentHTML('beforebegin', html)
+    if(node.parentElement){
+        node.insertAdjacentHTML('beforebegin', html)
+    }else{
+        let template = create('template',0)
+        template.innerHTML = html;
+        append(node.parentNode,template.content,node);
+    }
 }
 export function createEvent(node, event, handler) {
     node.addEventListener(event, handler)
 }
 export function removeEvent(node, event, handler) {
     node.removeEventListener(event, handler);
+}
+export function attachShadow(node,mode){
+    return node.attachShadow({mode:mode})
 }
 export function walker(root, instaceKey) {
     const filter = function (node) {
