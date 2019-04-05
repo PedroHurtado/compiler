@@ -47,18 +47,18 @@ class Injector {
         }
     }
 }
-function _register(injector, ctor, dependencies, type) {
+function _register(injector, ctor, args, type) {
     if (type !== type.VALUE) {
         injector._dependencies.set(ctor, {
             type,
             ctor,
-            args: dependencies
+            args
         });
     } else {
         injector._dependencies.set(ctor, {
             type,
             ctor: null,
-            args: dependencies
+            args
         });
     }
 }
