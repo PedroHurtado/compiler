@@ -19,6 +19,7 @@
     "prettier": "^1.16.4"
   },
   "devDependencies": {
-    "parcel-plugin-compress": "^1.0.9"
+    "parcel-plugin-compress": "^1.0.9",
+    "rollup-plugin-gzip": "^2.2.0"
   }
 }
