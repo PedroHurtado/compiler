@@ -33,18 +33,21 @@ class Injector {
         let { ctor, args, type } = this._getType(_type);
         if (ctor) {
             if (type === types.SINGLETON) {
-                let instance = this._cache.get(ctor);
-                if(!instance){
-                    instance = new ctor(...this._getArguments(args));
-                    this._cache.set(ctor,instance);
-                }
-                return instance;
+                return this._getSingleton(ctor, args);
             } else {
                 return new ctor(...this._getArguments(args));
             }
         } else {
             return args;
         }
+    }
+    _getSingleton(ctor, args) {
+        let instance = this._cache.get(ctor);
+        if (!instance) {
+            instance = new ctor(...this._getArguments(args));
+            this._cache.set(ctor, instance);
+        }
+        return instance;
     }
 }
 function _register(injector, ctor, args, type) {
