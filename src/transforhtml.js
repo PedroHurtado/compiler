@@ -1,9 +1,12 @@
 const parse5 = require("parse5");
+const dom5 = require('dom5');
 const interpolate = require("./interpolate");
 const attributes = require("./attributes");
 const parseCode = require("./transformjs");
+const {generateCSS} = require('./css');
 const Writer = require("./writer");
 const parseText = require("./parsetext");
+const htmlparser2Adapter = require('parse5-htmlparser2-tree-adapter');
 
 const TEXTJS = "j";
 const TEXT = "t";
@@ -14,8 +17,8 @@ const DEFAULTNAMESPACE = "http://www.w3.org/1999/xhtml";
 function extractParts(ast) {
   let body = ast.childNodes[0].childNodes[1];
   let nodes = body.childNodes.filter(node => {
-    let { tagName, value } = node;
-    return value || (tagName && tagName !== "script" && tagName !== "style");
+    let { tagName, nodeValue } = node;
+    return nodeValue || (tagName && tagName !== "script" && tagName !== "style");
   });
   let script = body.childNodes.filter(node => {
     let { tagName } = node;
@@ -46,19 +49,19 @@ const visitor = function (writer, nodes) {
   function isWebComponent(node) {
     return (
       node.tagName.indexOf("-") !== -1 ||
-      node.attrs.filter(attr => attr.name === "is").length > 0
+      Object.keys(node.attribs).filter(attr => attr.name === "is").length > 0
     );
   }
 
   (function visit(nodes) {
     nodes.forEach(element => {
-      let { tagName, value, attrs, childNodes, namespaceURI } = element;
+      let { tagName, nodeValue, attribs, childNodes, namespace } = element;
       if (tagName) {
         let item = createItem(tagName);
 
         if (isWebComponent(element)) {
           writer.write(`vdom.appendComponent('${item}','${tagName}');`);
-          let { processed, properties } = attributes(attrs, true);
+          let { processed, properties } = attributes(attribs, true);
           processed.forEach(attribute => {
             writer.write(attribute);
           });
@@ -68,9 +71,9 @@ const visitor = function (writer, nodes) {
             writer.write(`vdom.inputs();`);
           }
         } else {
-          let namespace = namespaceURI === DEFAULTNAMESPACE ? 0 : 1;
-          writer.write(`vdom.append('${item}','${tagName}',${namespace});`);
-          let { processed } = attributes(attrs);
+          let namespaceURI = namespace === DEFAULTNAMESPACE ? 0 : 1;
+          writer.write(`vdom.append('${item}','${tagName}',${namespaceURI});`);
+          let { processed } = attributes(attribs);
           processed.forEach(attribute => {
             writer.write(attribute);
           });
@@ -79,8 +82,8 @@ const visitor = function (writer, nodes) {
           visit(element.childNodes, item);
         }
         writer.write("vdom.closeElement();");
-      } else if (value) {
-        let statements = parseText(value);
+      } else if (nodeValue) {
+        let statements = parseText(nodeValue);
         statements.forEach(statement => {
           let { type, text } = statement;
           if (type === TEXTJS) {
@@ -108,7 +111,7 @@ const generateHeader = function (writer, script) {
   writer.write(imports);
   if (script.length > 0) {
     let [chilNode] = script[0].childNodes;
-    let value = chilNode.value;
+    let value = chilNode.nodeValue;
     if (value) {
       writer.write(value);
     }
@@ -120,11 +123,14 @@ const openRenderFunction = function (writer) {
 const closeRenderFunction = function (writer) {
   writer.write("vdom.close();vdom=null;}");
 };
-module.exports = function transforHml(html) {
-  let ast = parse5.parse(html);
+module.exports = async function transforHml(html, file) {
+  let ast = parse5.parse(html, {treeAdapter: htmlparser2Adapter});
   let writer = new Writer();
   let { nodes, script, style } = extractParts(ast);
-
+  // TODO: ver si tiene shadow -> usePrefix = !shadow
+  let usePrefix =  true;
+  const {css} = await generateCSS(style, file, nodes, usePrefix);
+  // TODO: guardar css en un estatico del script
   generateHeader(writer, script);
   openRenderFunction(writer);
   visitor(writer, nodes);

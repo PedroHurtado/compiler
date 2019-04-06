@@ -32,7 +32,9 @@ function getParameters(params) {
 module.exports = function attributes(attrs) {
   let processed = [];
   let properties = [];
-  attrs.forEach(attr => {
+  Object.entries(attrs)
+    .map(([name, value]) => ({name, value}))
+    .forEach(attr => {
     if (attr.name !== 'is') {
       if (attr.name === 'style') {
         let styles = styleAttribute(attr.value);
