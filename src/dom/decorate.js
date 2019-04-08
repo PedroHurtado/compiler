@@ -63,15 +63,17 @@ function connectedCallback(ctor) {
     }
 }
 function shadow(ctor) {
-    ctor.prototype._target = null;
-    Object.defineProperty(ctor.prototype, 'target', {
-        get: function () {
-            if (!this._target) {
-                this._target = attachShadow(this.__node || this, ctor.shadow)
+    if (ctor.shadow) {
+        ctor.prototype._target = null;
+        Object.defineProperty(ctor.prototype, 'target', {
+            get: function () {
+                if (!this._target) {
+                    this._target = attachShadow(this.__node || this, ctor.shadow)
+                }
+                return this._target;
             }
-            return this._target;
-        }
-    })
+        })
+    }
 }
 export function decorate(ctor, render) {
     ctor.prototype.set = set(render);
@@ -81,9 +83,7 @@ export function decorate(ctor, render) {
     decorateElementRef(ctor);
     decorateRef(ctor);
     connectedCallback(ctor);
-    if (ctor.shadow) {
-        shadow(ctor)
-    }
+    shadow(ctor)
     ctor.bootstrap = bootstrap;
 
 }

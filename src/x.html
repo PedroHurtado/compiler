@@ -39,6 +39,7 @@ html`esto es una prueba {html}`
 <script>
     import  './bar.js';
     import  './directive.js';
+    import {shadowMode} from './dom/shadowmode.js'
     export default class App extends HTMLElement {
         click(name) {
             this.set({ value:!this.value });
@@ -60,6 +61,9 @@ html`esto es una prueba {html}`
         }
         static get tag() {
             return 'x-foo';
+        }
+        static get shadow(){
+            return shadowMode.OPEN;
         }
     }
 </script>

@@ -7,6 +7,7 @@ const {generateCSS} = require('./css');
 const Writer = require("./writer");
 const parseText = require("./parsetext");
 const htmlparser2Adapter = require('parse5-htmlparser2-tree-adapter');
+const {hasShadow} = require('./hasshadow');
 
 const TEXTJS = "j";
 const TEXT = "t";
@@ -127,8 +128,8 @@ module.exports = async function transforHml(html, file) {
   let ast = parse5.parse(html, {treeAdapter: htmlparser2Adapter});
   let writer = new Writer();
   let { nodes, script, style } = extractParts(ast);
-  // TODO: ver si tiene shadow -> usePrefix = !shadow
-  let usePrefix =  true;
+  let scriptCode= script[0].children[0].data;
+  let usePrefix =  !hasShadow(scriptCode);
   const {css} = await generateCSS(style, file, nodes, usePrefix);
   // TODO: guardar css en un estatico del script
   generateHeader(writer, script);
