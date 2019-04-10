@@ -44,7 +44,7 @@ html`esto es una prueba {html}`
             this.load();
         }
         load(){
-           require.ensure('./baz.html');
+           import('./baz.html');
         }
         static get outputs() {
             return ['pepito'];
