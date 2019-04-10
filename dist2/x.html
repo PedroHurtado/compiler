@@ -37,12 +37,14 @@ html`esto es una prueba {html}`
     }
 </style>
 <script>
-    import  './bar.js';
-    import  './directive.js';
-    import {shadowMode} from './dom/shadowmode.js'
+    import './bar.html';
     export default class App extends HTMLElement {
         click(name) {
             this.set({ value:!this.value });
+            this.load();
+        }
+        load(){
+           require.ensure('./baz.html');
         }
         static get outputs() {
             return ['pepito'];

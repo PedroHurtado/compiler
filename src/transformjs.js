@@ -11,7 +11,8 @@ const generateCode = function (ast) {
 const transformJs = function (code) {
   
   let ast = parser(code,{
-    sourceType:'module'
+    sourceType:'module',
+    plugins:["dynamicImport"]
   });
   traverse(ast, visitorRender);
   return generateCode(ast);

@@ -24,7 +24,15 @@
             "program": "${workspaceFolder}/src/index.js",
             "cwd": "${workspaceFolder}/src",
             "args": ["./x.html"]
-        }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Rollup",
+            "program": "C:\\Users\\Pedro-hurtado\\AppData\\Roaming\\npm\node_modules\\rollup\\dist\\rollup.js",
+            "args": ["-c"]
+
+        },
 
     ]
 }

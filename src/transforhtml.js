@@ -128,9 +128,10 @@ module.exports = async function transforHml(html, file) {
   let ast = parse5.parse(html, {treeAdapter: htmlparser2Adapter});
   let writer = new Writer();
   let { nodes, script, style } = extractParts(ast);
-  let scriptCode= script[0].children[0].data;
-  let usePrefix =  !hasShadow(scriptCode);
-  const {css} = await generateCSS(style, file, nodes, usePrefix);
+  //console.log(style);
+  //let scriptCode= script[0].children[0].data;
+  //let usePrefix =  !hasShadow(scriptCode);
+  //const {css} = await generateCSS(style, file, nodes, false);
   // TODO: guardar css en un estatico del script
   generateHeader(writer, script);
   openRenderFunction(writer);
